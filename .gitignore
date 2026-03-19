@@ -1,5 +1,6 @@
 # Dependencies
 node_modules/
+commands.txt
 
 # Backups
 *.tar.gz

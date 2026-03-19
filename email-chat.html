@@ -4,16 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Email Production Pipeline</title>
-  <link href="https://cdn.jsdelivr.net/npm/@n8n/chat/dist/style.css" rel="stylesheet" />
   <style>
     :root {
       --primary: #7c3aed;
-      --primary-light: #a78bfa;
+      --primary-hover: #6d28d9;
       --bg: #0f0f11;
       --surface: #1a1a1f;
       --surface-2: #25252b;
       --text: #e4e4e7;
-      --text-muted: #a1a1aa;
+      --text-muted: #71717a;
       --border: #2e2e35;
     }
 
@@ -23,256 +22,425 @@
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       background: var(--bg);
       color: var(--text);
-      min-height: 100vh;
+      height: 100vh;
       display: flex;
       flex-direction: column;
     }
 
-    header {
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: 16px 24px;
+    /* ── Messages area ── */
+    #messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px;
       display: flex;
-      align-items: center;
+      flex-direction: column;
       gap: 16px;
     }
 
-    .logo {
-      width: 36px;
-      height: 36px;
+    /* Center the welcome text when no conversation yet */
+    #messages.empty {
+      justify-content: center;
+      align-items: center;
+    }
+
+    .welcome {
+      text-align: center;
+      max-width: 480px;
+    }
+    .welcome h1 {
+      font-size: 22px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    .welcome p {
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .msg {
+      max-width: 720px;
+      padding: 12px 16px;
+      border-radius: 12px;
+      font-size: 14px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .msg.user {
+      align-self: flex-end;
       background: var(--primary);
+      color: #fff;
+      border-bottom-right-radius: 4px;
+    }
+    .msg.bot {
+      align-self: flex-start;
+      background: var(--surface-2);
+      color: var(--text);
+      border-bottom-left-radius: 4px;
+    }
+    .msg.bot code, .msg.bot pre {
+      background: #1a1a1f;
+      border-radius: 6px;
+      font-size: 13px;
+    }
+    .msg.bot pre {
+      padding: 12px;
+      overflow-x: auto;
+      margin: 8px 0;
+    }
+    .msg.bot code {
+      padding: 2px 5px;
+    }
+    .msg img {
+      max-width: 100%;
       border-radius: 8px;
+      margin-top: 8px;
+    }
+
+    .typing {
+      align-self: flex-start;
+      color: var(--text-muted);
+      font-size: 14px;
+      padding: 12px 16px;
+    }
+    .typing span {
+      animation: blink 1.4s infinite;
+    }
+    .typing span:nth-child(2) { animation-delay: 0.2s; }
+    .typing span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes blink {
+      0%, 80%, 100% { opacity: 0.2; }
+      40% { opacity: 1; }
+    }
+
+    /* ── Image preview strip ── */
+    #image-preview {
+      display: none;
+      padding: 8px 24px 0;
+      gap: 8px;
+      flex-wrap: wrap;
+      max-width: 780px;
+      margin: 0 auto;
+      width: 100%;
+    }
+    #image-preview.visible { display: flex; }
+    .thumb-wrap {
+      position: relative;
+      width: 64px;
+      height: 64px;
+    }
+    .thumb-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+    .thumb-remove {
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #ef4444;
+      color: #fff;
+      border: none;
+      font-size: 12px;
+      cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 18px;
-      font-weight: 700;
-      color: white;
-      flex-shrink: 0;
+      line-height: 1;
     }
 
-    header h1 {
-      font-size: 18px;
-      font-weight: 600;
-    }
-
-    header p {
-      font-size: 13px;
-      color: var(--text-muted);
-    }
-
-    .status {
-      margin-left: auto;
+    /* ── Input bar ── */
+    #input-bar {
+      padding: 16px 24px 24px;
       display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 13px;
-      color: var(--text-muted);
-    }
-
-    .status-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: #22c55e;
-    }
-
-    main {
-      flex: 1;
-      display: flex;
-      max-width: 1200px;
+      align-items: flex-end;
+      gap: 10px;
+      max-width: 780px;
       width: 100%;
       margin: 0 auto;
-      gap: 0;
     }
 
-    .sidebar {
-      width: 280px;
+    #attach-btn {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
       background: var(--surface);
-      border-right: 1px solid var(--border);
-      padding: 24px;
+      color: var(--text-muted);
+      font-size: 22px;
+      cursor: pointer;
       flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s, color 0.15s;
+    }
+    #attach-btn:hover {
+      background: var(--surface-2);
+      color: var(--text);
+    }
+
+    #msg-input {
+      flex: 1;
+      min-height: 42px;
+      max-height: 180px;
+      padding: 10px 16px;
+      border-radius: 21px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      font-size: 14px;
+      font-family: inherit;
+      resize: none;
+      outline: none;
+      line-height: 1.5;
       overflow-y: auto;
     }
+    #msg-input::placeholder { color: var(--text-muted); }
+    #msg-input:focus { border-color: var(--primary); }
 
-    .sidebar h3 {
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: var(--text-muted);
-      margin-bottom: 12px;
-    }
-
-    .sidebar ul {
-      list-style: none;
-      margin-bottom: 24px;
-    }
-
-    .sidebar li {
-      font-size: 13px;
-      padding: 6px 0;
-      color: var(--text-muted);
-      display: flex;
-      align-items: flex-start;
-      gap: 8px;
-    }
-
-    .sidebar li::before {
-      content: "→";
-      color: var(--primary-light);
+    #send-btn {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      border: none;
+      background: var(--primary);
+      color: #fff;
+      font-size: 18px;
+      cursor: pointer;
       flex-shrink: 0;
-    }
-
-    .chat-container {
-      flex: 1;
       display: flex;
-      flex-direction: column;
-      min-width: 0;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s;
+    }
+    #send-btn:hover { background: var(--primary-hover); }
+    #send-btn:disabled {
+      opacity: 0.4;
+      cursor: default;
     }
 
-    /* Override n8n chat widget styles to embed inline instead of floating */
-    #n8n-chat {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-    }
+    #file-input { display: none; }
 
-    /* n8n chat customization */
-    :root {
-      --chat--color-primary: #7c3aed;
-      --chat--color-primary-shade-50: #6d28d9;
-      --chat--color-primary-shade-100: #5b21b6;
-      --chat--color-secondary: #1a1a1f;
-      --chat--color-secondary-shade-50: #25252b;
-      --chat--color-white: #e4e4e7;
-      --chat--color-light: #a1a1aa;
-      --chat--color-light-shade-50: #71717a;
-      --chat--color-medium: #52525b;
-      --chat--color-dark: #e4e4e7;
-      --chat--color-disabled: #3f3f46;
-      --chat--color-typing: #a1a1aa;
-      --chat--window--width: 100%;
-      --chat--window--height: 100%;
-      --chat--message--bot--background: #25252b;
-      --chat--message--user--background: #7c3aed;
-      --chat--message--bot--color: #e4e4e7;
-      --chat--message--user--color: #ffffff;
-      --chat--textarea--background: #1a1a1f;
-      --chat--textarea--color: #e4e4e7;
-      --chat--window--background: #0f0f11;
-      --chat--header--background: #1a1a1f;
-      --chat--header--color: #e4e4e7;
-    }
-
-    .setup-banner {
-      background: #1e1b4b;
-      border: 1px solid #312e81;
-      border-radius: 8px;
-      padding: 16px 20px;
-      margin: 20px;
-      font-size: 13px;
-      line-height: 1.6;
-    }
-
-    .setup-banner code {
-      background: #312e81;
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-size: 12px;
-    }
-
-    .setup-banner a {
-      color: var(--primary-light);
-    }
-
-    @media (max-width: 768px) {
-      .sidebar { display: none; }
-      main { max-width: 100%; }
-    }
+    /* ── Scrollbar ── */
+    #messages::-webkit-scrollbar { width: 6px; }
+    #messages::-webkit-scrollbar-track { background: transparent; }
+    #messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
   </style>
 </head>
 <body>
-  <header>
-    <div class="logo">E</div>
-    <div>
+
+  <div id="messages" class="empty">
+    <div class="welcome">
       <h1>Email Production Pipeline</h1>
-      <p>AI-powered accessible email builder</p>
+      <p>Paste Figma HTML, share a screenshot, or describe the email you need.</p>
     </div>
-    <div class="status">
-      <span class="status-dot"></span>
-      Online
-    </div>
-  </header>
+  </div>
 
-  <main>
-    <aside class="sidebar">
-      <h3>What you can do</h3>
-      <ul>
-        <li>Paste Figma HTML exports for cleanup</li>
-        <li>Share a design screenshot to rebuild</li>
-        <li>Ask for a new email from scratch</li>
-        <li>Request accessibility testing</li>
-        <li>Package approved emails for delivery</li>
-      </ul>
+  <div id="image-preview"></div>
 
-      <h3>Example prompts</h3>
-      <ul>
-        <li>"Build a newsletter email with a hero image, two-column body, and dark CTA button"</li>
-        <li>"Here's my Figma export, clean it up for email"</li>
-        <li>"Run accessibility tests on the last email"</li>
-        <li>"Package it for delivery, campaign name: Spring 2026"</li>
-      </ul>
+  <div id="input-bar">
+    <button id="attach-btn" title="Attach image">+</button>
+    <textarea id="msg-input" rows="1" placeholder="Describe your email or paste HTML..."></textarea>
+    <button id="send-btn" title="Send" disabled>&#10148;</button>
+    <input type="file" id="file-input" accept="image/*" multiple />
+  </div>
 
-      <h3>Built-in checks</h3>
-      <ul>
-        <li>POUR accessibility compliance</li>
-        <li>Dark mode support</li>
-        <li>Email client compatibility</li>
-        <li>Brand guideline validation</li>
-        <li>Heading hierarchy</li>
-        <li>Link text quality</li>
-      </ul>
-    </aside>
-
-    <div class="chat-container" id="n8n-chat"></div>
-  </main>
-
-  <script type="module">
-    import { createChat } from 'https://cdn.jsdelivr.net/npm/@n8n/chat/dist/chat.bundle.es.js';
-
+  <script>
     // ╔═══════════════════════════════════════════════════════════╗
     // ║  SETUP: Replace the URL below with your webhook URL.     ║
-    // ║                                                          ║
-    // ║  To find it:                                             ║
-    // ║  1. Open n8n → your workflow                             ║
-    // ║  2. Click "When chat message received" node              ║
-    // ║  3. Copy the "Production URL"                            ║
-    // ║                                                          ║
-    // ║  It looks like:                                          ║
-    // ║  http://localhost:5678/webhook/xxxxxxxx-xxxx-.../chat     ║
     // ╚═══════════════════════════════════════════════════════════╝
     const WEBHOOK_URL = 'http://localhost:5678/webhook/0729cd0c-8f9c-48bc-bb61-c478c0597093/chat';
 
-    createChat({
-      webhookUrl: WEBHOOK_URL,
-      target: '#n8n-chat',
-      mode: 'fullscreen',
-      showWelcomeScreen: false,
-      initialMessages: [
-        'Hi! I\'m your email production assistant. 👋',
-        'Paste your Figma HTML, share a design image, or describe the email you need. I\'ll build accessible, dark-mode-ready HTML for you.'
-      ],
-      i18n: {
-        en: {
-          title: '',
-          subtitle: '',
-          inputPlaceholder: 'Describe your email or paste HTML...',
-          getStarted: 'Start Building',
-          closeButtonTooltip: 'Close',
-        },
-      },
-      metadata: {},
+    const messages  = document.getElementById('messages');
+    const input     = document.getElementById('msg-input');
+    const sendBtn   = document.getElementById('send-btn');
+    const attachBtn = document.getElementById('attach-btn');
+    const fileInput = document.getElementById('file-input');
+    const preview   = document.getElementById('image-preview');
+
+    let sessionId = crypto.randomUUID();
+    let pendingImages = [];
+    let busy = false;
+
+    // ── Auto-resize textarea ──
+    input.addEventListener('input', () => {
+      input.style.height = 'auto';
+      input.style.height = Math.min(input.scrollHeight, 180) + 'px';
+      updateSendBtn();
     });
+
+    function updateSendBtn() {
+      sendBtn.disabled = busy || (!input.value.trim() && pendingImages.length === 0);
+    }
+
+    // ── Attach images via + button ──
+    attachBtn.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', () => {
+      for (const file of fileInput.files) addImage(file);
+      fileInput.value = '';
+    });
+
+    // ── Paste images into textarea ──
+    input.addEventListener('paste', (e) => {
+      const items = [...(e.clipboardData?.items || [])];
+      for (const item of items) {
+        if (item.type.startsWith('image/')) {
+          e.preventDefault();
+          addImage(item.getAsFile());
+        }
+      }
+    });
+
+    function addImage(file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        pendingImages.push({ dataUrl: reader.result, file });
+        renderPreviews();
+        updateSendBtn();
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function renderPreviews() {
+      preview.innerHTML = '';
+      if (pendingImages.length === 0) {
+        preview.classList.remove('visible');
+        return;
+      }
+      preview.classList.add('visible');
+      pendingImages.forEach((img, i) => {
+        const wrap = document.createElement('div');
+        wrap.className = 'thumb-wrap';
+        const thumb = document.createElement('img');
+        thumb.src = img.dataUrl;
+        thumb.alt = 'Attached image';
+        const btn = document.createElement('button');
+        btn.className = 'thumb-remove';
+        btn.textContent = '\u00d7';
+        btn.addEventListener('click', () => {
+          pendingImages.splice(i, 1);
+          renderPreviews();
+          updateSendBtn();
+        });
+        wrap.append(thumb, btn);
+        preview.appendChild(wrap);
+      });
+    }
+
+    // ── Send ──
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        send();
+      }
+    });
+    sendBtn.addEventListener('click', send);
+
+    async function send() {
+      const text = input.value.trim();
+      if (!text && pendingImages.length === 0) return;
+      if (busy) return;
+
+      // Clear welcome
+      const welcome = messages.querySelector('.welcome');
+      if (welcome) welcome.remove();
+      messages.classList.remove('empty');
+
+      // Show user message
+      const userDiv = document.createElement('div');
+      userDiv.className = 'msg user';
+      if (text) userDiv.textContent = text;
+      pendingImages.forEach(img => {
+        const el = document.createElement('img');
+        el.src = img.dataUrl;
+        el.alt = 'User image';
+        userDiv.appendChild(el);
+      });
+      messages.appendChild(userDiv);
+      scrollDown();
+
+      // Build request
+      const currentImages = [...pendingImages];
+      const currentText = text;
+      pendingImages = [];
+      renderPreviews();
+      input.value = '';
+      input.style.height = 'auto';
+      updateSendBtn();
+      busy = true;
+      showTyping();
+
+      try {
+        let res;
+        if (currentImages.length > 0) {
+          const form = new FormData();
+          form.append('sessionId', sessionId);
+          form.append('action', 'sendMessage');
+          form.append('chatInput', currentText || 'Please review the attached image(s).');
+          currentImages.forEach((img, i) =>
+            form.append('files', img.file, img.file.name || 'image-' + i + '.png')
+          );
+          res = await fetch(WEBHOOK_URL, { method: 'POST', body: form });
+        } else {
+          res = await fetch(WEBHOOK_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ sessionId, action: 'sendMessage', chatInput: currentText }),
+          });
+        }
+        const data = await res.json();
+        hideTyping();
+        addBotMessage(data.output || data.text || JSON.stringify(data));
+      } catch (err) {
+        hideTyping();
+        addBotMessage('Connection error \u2014 is the n8n workflow active?');
+      }
+      busy = false;
+      updateSendBtn();
+    }
+
+    function addBotMessage(text) {
+      const div = document.createElement('div');
+      div.className = 'msg bot';
+      let html = escapeHtml(text);
+      html = html.replace(/```(\w*)\n([\s\S]*?)```/g, '<pre><code>$2</code></pre>');
+      html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+      html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+      div.innerHTML = html;
+      messages.appendChild(div);
+      scrollDown();
+    }
+
+    function escapeHtml(str) {
+      const d = document.createElement('div');
+      d.textContent = str;
+      return d.innerHTML;
+    }
+
+    function showTyping() {
+      const el = document.createElement('div');
+      el.className = 'typing';
+      el.id = 'typing-indicator';
+      el.innerHTML = '<span>.</span><span>.</span><span>.</span>';
+      messages.appendChild(el);
+      scrollDown();
+    }
+
+    function hideTyping() {
+      const el = document.getElementById('typing-indicator');
+      if (el) el.remove();
+    }
+
+    function scrollDown() {
+      messages.scrollTop = messages.scrollHeight;
+    }
   </script>
 </body>
 </html>
