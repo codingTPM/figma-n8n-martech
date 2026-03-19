@@ -1,0 +1,1130 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      font-size: 12px;
+      color: #333;
+      background: #fff;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .header {
+      padding: 16px;
+      border-bottom: 1px solid #e5e5e5;
+      background: #f7f7f7;
+    }
+
+    .header h1 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: #333;
+    }
+
+    .header p {
+      color: #666;
+      font-size: 11px;
+    }
+
+    .content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      padding: 16px;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+
+    .toolbar-left {
+      display: flex;
+      gap: 6px;
+      margin-right: auto;
+    }
+
+    .toolbar-right {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      align-items: center;
+    }
+
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      color: #555;
+      cursor: pointer;
+      user-select: none;
+      margin-right: 4px;
+    }
+
+    .checkbox-label input[type="checkbox"] {
+      margin: 0;
+      cursor: pointer;
+    }
+
+    .tab {
+      padding: 8px 16px;
+      border: none;
+      background: #f0f0f0;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .tab:hover {
+      background: #e0e0e0;
+    }
+
+    .tab.active {
+      background: #18a0fb;
+      color: white;
+    }
+
+    .code-container {
+      flex: 1;
+      position: relative;
+      border: 1px solid #e5e5e5;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .code-area {
+      width: 100%;
+      height: 100%;
+      padding: 12px;
+      border: none;
+      resize: none;
+      font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+      font-size: 11px;
+      line-height: 1.5;
+      background: #fafafa;
+      color: #333;
+    }
+
+    .code-area:focus {
+      outline: none;
+      background: #fff;
+    }
+
+    .preview-frame {
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: white;
+    }
+
+
+
+    .btn {
+      padding: 7px 12px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 500;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .btn-primary {
+      background: #18a0fb;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #0d8de5;
+    }
+
+    .btn-secondary {
+      background: #f0f0f0;
+      color: #333;
+    }
+
+    .btn-secondary:hover {
+      background: #e0e0e0;
+    }
+
+    .btn-success {
+      background: #1bc47d;
+      color: white;
+    }
+
+    .error-message {
+      background: #ffebee;
+      color: #c62828;
+      padding: 16px;
+      border-radius: 8px;
+      margin: 16px;
+      text-align: center;
+    }
+
+    .error-message h3 {
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: #666;
+    }
+
+    .status {
+      padding: 8px 12px;
+      background: #e8f5e9;
+      color: #2e7d32;
+      border-radius: 4px;
+      font-size: 11px;
+      margin-left: auto;
+      display: none;
+    }
+
+    .status.show {
+      display: block;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .frame-name {
+      font-weight: 600;
+      color: #18a0fb;
+    }
+
+    .options-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 10px;
+      font-size: 11px;
+      color: #666;
+    }
+
+    .options-row input[type="checkbox"] {
+      margin: 0;
+    }
+
+    .options-row label {
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .export-name-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+      font-size: 11px;
+    }
+
+    .export-name-row label {
+      color: #666;
+      white-space: nowrap;
+      font-weight: 500;
+    }
+
+    .export-name-row input[type="text"] {
+      flex: 1;
+      padding: 6px 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 11px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .export-name-row input[type="text"]:focus {
+      border-color: #18a0fb;
+    }
+
+    .frame-selector {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+      font-size: 11px;
+    }
+
+    .frame-selector label {
+      color: #666;
+      white-space: nowrap;
+      font-weight: 500;
+    }
+
+    .frame-selector select {
+      flex: 1;
+      padding: 6px 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 11px;
+      font-family: inherit;
+      outline: none;
+      background: white;
+      transition: border-color 0.2s;
+    }
+
+    .frame-selector select:focus {
+      border-color: #18a0fb;
+    }
+
+    .selection-container {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      height: 100%;
+    }
+
+    .selection-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .selection-search {
+      flex: 1;
+      min-width: 220px;
+      padding: 7px 9px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 12px;
+      font-family: inherit;
+      outline: none;
+    }
+
+    .selection-search:focus {
+      border-color: #18a0fb;
+    }
+
+    .selection-summary {
+      font-size: 11px;
+      color: #666;
+    }
+
+    .selection-list {
+      flex: 1;
+      border: 1px solid #e5e5e5;
+      border-radius: 8px;
+      overflow: auto;
+      background: #fafafa;
+    }
+
+    .selection-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 10px;
+      border-bottom: 1px solid #ececec;
+      font-size: 12px;
+    }
+
+    .selection-row:last-child {
+      border-bottom: none;
+    }
+
+    .selection-row input[type="checkbox"] {
+      margin: 0;
+    }
+
+    .selection-name {
+      flex: 1;
+      word-break: break-word;
+    }
+
+    .selection-type {
+      font-size: 10px;
+      color: #3b82f6;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 999px;
+      padding: 2px 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      white-space: nowrap;
+    }
+
+    .selection-empty {
+      padding: 16px;
+      color: #888;
+      font-size: 12px;
+      text-align: center;
+    }
+
+    .actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="header">
+    <h1>🎨 DanHTML Export</h1>
+    <p id="subtitle">Select frames/components, or choose from outer page items when nothing is selected.</p>
+  </div>
+
+  <div class="content" id="content">
+    <div class="loading" id="loading">
+      <p id="loading-text">Processing your design...</p>
+    </div>
+
+    <div class="hidden" id="error-container">
+      <div class="error-message">
+        <h3>⚠️ Error</h3>
+        <p id="error-text"></p>
+      </div>
+      <div class="actions">
+        <button class="btn btn-secondary" onclick="closePlugin()">Close</button>
+      </div>
+    </div>
+
+    <div class="hidden selection-container" id="selection-container">
+      <div class="selection-toolbar">
+        <input
+          type="text"
+          class="selection-search"
+          id="selection-search"
+          placeholder="Search frames/components..."
+          oninput="onSelectionSearchInput()"
+        />
+        <button class="btn btn-secondary" onclick="selectAllVisibleCandidates()">Select Visible</button>
+        <button class="btn btn-secondary" onclick="clearAllVisibleCandidates()">Clear Visible</button>
+      </div>
+      <div class="selection-summary" id="selection-summary"></div>
+      <div class="selection-list" id="selection-list"></div>
+      <div class="actions">
+        <button class="btn btn-primary" onclick="exportSelectedCandidates()">Export Selected</button>
+        <button class="btn btn-secondary" onclick="closePlugin()">Close</button>
+      </div>
+    </div>
+
+    <div class="hidden" id="result-container">
+      <div class="frame-selector hidden" id="frame-selector-row">
+        <label for="frame-select">Viewing:</label>
+        <select id="frame-select" onchange="onFrameSelectChange()"></select>
+      </div>
+
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <button class="tab active" id="tab-html" onclick="showTab('html')">HTML</button>
+          <button class="tab" id="tab-preview" onclick="showTab('preview')">Preview</button>
+        </div>
+        <div class="toolbar-right">
+          <label class="checkbox-label"><input type="checkbox" id="include-images" /> Include images</label>
+          <button class="btn btn-success" onclick="downloadHtml()">💾 Download HTML</button>
+          <button class="btn btn-success" onclick="downloadImages()">🖼️ Download Images</button>
+          <button class="btn btn-secondary" onclick="refreshExport()">🔄</button>
+          <button class="btn btn-secondary" onclick="closePlugin()">✕</button>
+          <span class="status" id="status">Copied!</span>
+        </div>
+      </div>
+
+      <div class="code-container">
+        <textarea class="code-area" id="code-output" readonly></textarea>
+        <iframe class="preview-frame hidden" id="preview-frame"></iframe>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentHtml = '';
+    let previewHtml = '';
+    let currentName = 'export';
+    let currentAssets = [];
+    let previewBlobUrls = [];
+    let watchdogTimer = null;
+    // Multi-frame state
+    let multiFiles = [];   // [{name, html}...]
+    let isMultiMode = false;
+    // Candidate picker state (shown when nothing is selected in Figma)
+    let selectionCandidates = []; // [{ id, name, type }]
+    let selectedCandidateIds = new Set();
+
+    function startWatchdog(actionLabel) {
+      try {
+        if (watchdogTimer) clearTimeout(watchdogTimer);
+      } catch (_) { }
+      watchdogTimer = setTimeout(() => {
+        document.getElementById('loading').classList.add('hidden');
+        document.getElementById('result-container').classList.add('hidden');
+        document.getElementById('error-container').classList.remove('hidden');
+        document.getElementById('error-text').textContent =
+          `No response from plugin after starting "${actionLabel}". ` +
+          `If you changed code.ts, run npm run build (or npm run watch) to regenerate code.js, ` +
+          `then reload/re-run the plugin in Figma.`;
+      }, 3000);
+    }
+
+    function stopWatchdog() {
+      try {
+        if (watchdogTimer) clearTimeout(watchdogTimer);
+      } catch (_) { }
+      watchdogTimer = null;
+    }
+
+    function showStatus(text) {
+      const status = document.getElementById('status');
+      status.textContent = text || 'Done';
+      status.classList.add('show');
+      setTimeout(() => status.classList.remove('show'), 2500);
+    }
+
+    function escapeHtml(text) {
+      return String(text || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function hideAllPanels() {
+      document.getElementById('loading').classList.add('hidden');
+      document.getElementById('error-container').classList.add('hidden');
+      document.getElementById('selection-container').classList.add('hidden');
+      document.getElementById('result-container').classList.add('hidden');
+    }
+
+    function getSelectionQuery() {
+      return (document.getElementById('selection-search').value || '').trim().toLowerCase();
+    }
+
+    function getFilteredCandidates() {
+      const query = getSelectionQuery();
+      if (!query) return selectionCandidates.slice();
+      return selectionCandidates.filter((item) => {
+        const name = String(item && item.name ? item.name : '').toLowerCase();
+        const type = String(item && item.type ? item.type : '').toLowerCase();
+        return name.includes(query) || type.includes(query);
+      });
+    }
+
+    function updateSelectionSummary() {
+      const total = selectionCandidates.length;
+      const selected = selectedCandidateIds.size;
+      const visible = getFilteredCandidates().length;
+      document.getElementById('selection-summary').textContent =
+        `${selected} selected of ${total} total (${visible} visible)`;
+    }
+
+    function renderSelectionList() {
+      const listEl = document.getElementById('selection-list');
+      const filtered = getFilteredCandidates();
+
+      if (filtered.length === 0) {
+        listEl.innerHTML = '<div class="selection-empty">No matching frames/components.</div>';
+        updateSelectionSummary();
+        return;
+      }
+
+      listEl.innerHTML = filtered.map((item) => {
+        const checked = selectedCandidateIds.has(item.id) ? 'checked' : '';
+        const type = escapeHtml(String(item.type || ''));
+        const name = escapeHtml(String(item.name || 'Unnamed'));
+        return `
+          <label class="selection-row">
+            <input type="checkbox" data-node-id="${escapeHtml(item.id)}" ${checked} />
+            <span class="selection-name">${name}</span>
+            <span class="selection-type">${type}</span>
+          </label>
+        `;
+      }).join('');
+
+      listEl.querySelectorAll('input[type="checkbox"][data-node-id]').forEach((input) => {
+        input.addEventListener('change', (event) => {
+          const id = event.target.getAttribute('data-node-id');
+          if (!id) return;
+          if (event.target.checked) selectedCandidateIds.add(id);
+          else selectedCandidateIds.delete(id);
+          updateSelectionSummary();
+        });
+      });
+
+      updateSelectionSummary();
+    }
+
+    function onSelectionSearchInput() {
+      renderSelectionList();
+    }
+
+    function selectAllVisibleCandidates() {
+      for (const item of getFilteredCandidates()) {
+        selectedCandidateIds.add(item.id);
+      }
+      renderSelectionList();
+    }
+
+    function clearAllVisibleCandidates() {
+      for (const item of getFilteredCandidates()) {
+        selectedCandidateIds.delete(item.id);
+      }
+      renderSelectionList();
+    }
+
+    function showSelectionCandidates(items, defaultSelectedIds) {
+      selectionCandidates = Array.isArray(items) ? items : [];
+      selectedCandidateIds = new Set(Array.isArray(defaultSelectedIds) ? defaultSelectedIds : []);
+      document.getElementById('selection-search').value = '';
+      hideAllPanels();
+      document.getElementById('selection-container').classList.remove('hidden');
+      document.getElementById('subtitle').textContent = 'No selection found. Choose outer frames/components to export.';
+      renderSelectionList();
+    }
+
+    function exportSelectedCandidates() {
+      const nodeIds = Array.from(selectedCandidateIds);
+      if (nodeIds.length === 0) {
+        showStatus('Select at least one item');
+        return;
+      }
+      hideAllPanels();
+      document.getElementById('loading').classList.remove('hidden');
+      const loadingText = document.getElementById('loading-text');
+      if (loadingText) loadingText.textContent = `Exporting ${nodeIds.length} item(s)...`;
+      startWatchdog('Export Selected');
+      parent.postMessage({ pluginMessage: { type: 'export-selected', nodeIds } }, '*');
+    }
+
+    // Minimal ZIP writer (STORE, no compression) so we can export without network access.
+    const _crcTable = (() => {
+      const table = new Uint32Array(256);
+      for (let n = 0; n < 256; n++) {
+        let c = n;
+        for (let k = 0; k < 8; k++) {
+          c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+        }
+        table[n] = c >>> 0;
+      }
+      return table;
+    })();
+
+    function crc32(bytes) {
+      let crc = 0xFFFFFFFF;
+      for (let i = 0; i < bytes.length; i++) {
+        crc = _crcTable[(crc ^ bytes[i]) & 0xFF] ^ (crc >>> 8);
+      }
+      return (crc ^ 0xFFFFFFFF) >>> 0;
+    }
+
+    function u16(n) {
+      return new Uint8Array([n & 0xFF, (n >>> 8) & 0xFF]);
+    }
+
+    function u32(n) {
+      return new Uint8Array([n & 0xFF, (n >>> 8) & 0xFF, (n >>> 16) & 0xFF, (n >>> 24) & 0xFF]);
+    }
+
+    function concatChunks(chunks) {
+      let total = 0;
+      for (const c of chunks) total += c.length;
+      const out = new Uint8Array(total);
+      let offset = 0;
+      for (const c of chunks) {
+        out.set(c, offset);
+        offset += c.length;
+      }
+      return out;
+    }
+
+    function buildZip(fileEntries) {
+      // fileEntries: Array<{ name: string, data: Uint8Array }>
+      const enc = new TextEncoder();
+      const chunks = [];
+      const central = [];
+      let offset = 0;
+
+      for (const entry of fileEntries) {
+        const nameBytes = enc.encode(entry.name);
+        const data = entry.data || new Uint8Array();
+        const crc = crc32(data);
+        const size = data.length >>> 0;
+
+        // Local file header
+        const localHeader = concatChunks([
+          u32(0x04034b50),
+          u16(20), // version needed
+          u16(0),  // flags
+          u16(0),  // compression (store)
+          u16(0),  // mod time
+          u16(0),  // mod date
+          u32(crc),
+          u32(size),
+          u32(size),
+          u16(nameBytes.length),
+          u16(0),
+          nameBytes,
+        ]);
+
+        chunks.push(localHeader);
+        chunks.push(data);
+
+        // Central directory header
+        const centralHeader = concatChunks([
+          u32(0x02014b50),
+          u16(20), // version made by
+          u16(20), // version needed
+          u16(0),
+          u16(0),
+          u16(0),
+          u16(0),
+          u32(crc),
+          u32(size),
+          u32(size),
+          u16(nameBytes.length),
+          u16(0),
+          u16(0),
+          u16(0),
+          u16(0),
+          u32(0),
+          u32(offset),
+          nameBytes,
+        ]);
+        central.push(centralHeader);
+
+        offset += localHeader.length + data.length;
+      }
+
+      const centralStart = offset;
+      for (const c of central) {
+        chunks.push(c);
+        offset += c.length;
+      }
+
+      const centralSize = offset - centralStart;
+      const end = concatChunks([
+        u32(0x06054b50),
+        u16(0),
+        u16(0),
+        u16(central.length),
+        u16(central.length),
+        u32(centralSize),
+        u32(centralStart),
+        u16(0),
+      ]);
+      chunks.push(end);
+
+      return new Blob(chunks, { type: 'application/zip' });
+    }
+
+    function base64ToUint8Array(base64) {
+      const binary = atob(base64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i);
+      }
+      return bytes;
+    }
+
+    function buildPreviewHtmlWithAssets(html, assets) {
+      // Revoke any previous blob URLs
+      for (const url of previewBlobUrls) {
+        try { URL.revokeObjectURL(url); } catch (_) { }
+      }
+      previewBlobUrls = [];
+
+      let result = html;
+      for (const asset of assets || []) {
+        if (!asset || !asset.name || !asset.data) continue;
+        const bytes = base64ToUint8Array(asset.data);
+        const blob = new Blob([bytes], { type: asset.mime || 'application/octet-stream' });
+        const url = URL.createObjectURL(blob);
+        previewBlobUrls.push(url);
+
+        // Replace quoted occurrences in CSS/HTML (asset.name is bare filename,
+        // but HTML references include a folder prefix, so match any path ending with the name)
+        const nameEscaped = asset.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const pattern = new RegExp(`(['\"])([^'\"]*?${nameEscaped})\\1`, 'g');
+        result = result.replace(pattern, `$1${url}$1`);
+      }
+
+      // Extract font families from CSS and inject Google Fonts link for preview
+      try {
+        const genericFonts = new Set([
+          'sans-serif', 'serif', 'monospace', 'cursive', 'fantasy',
+          'system-ui', 'ui-sans-serif', 'ui-serif', 'ui-monospace', 'ui-rounded',
+          'emoji', 'math', 'fangsong', 'inherit', 'initial', 'unset'
+        ]);
+        const fontFamilyRegex = /font-family:\s*([^;]+)/gi;
+        const uniqueFonts = new Set();
+        let match;
+        while ((match = fontFamilyRegex.exec(result)) !== null) {
+          const families = match[1].split(',').map(f => f.trim().replace(/^['"]|['"]$/g, ''));
+          for (const family of families) {
+            if (family && !genericFonts.has(family.toLowerCase())) {
+              uniqueFonts.add(family);
+            }
+          }
+        }
+        if (uniqueFonts.size > 0) {
+          const fontParam = Array.from(uniqueFonts)
+            .map(f => 'family=' + encodeURIComponent(f) + ':wght@100;200;300;400;500;600;700;800;900')
+            .join('&');
+          const fontLink = `<link rel="preconnect" href="https://fonts.googleapis.com">` +
+            `<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>` +
+            `<link href="https://fonts.googleapis.com/css2?${fontParam}&display=swap" rel="stylesheet">`;
+          // Inject right before </head>
+          result = result.replace('</head>', fontLink + '\n</head>');
+        }
+      } catch (_fontErr) {
+        // Non-critical: if font extraction fails, preview still works without custom fonts
+      }
+
+      return result;
+    }
+
+    function showTab(tab) {
+      const htmlTab = document.getElementById('tab-html');
+      const previewTab = document.getElementById('tab-preview');
+      const codeOutput = document.getElementById('code-output');
+      const previewFrame = document.getElementById('preview-frame');
+
+      if (tab === 'html') {
+        htmlTab.classList.add('active');
+        previewTab.classList.remove('active');
+        codeOutput.classList.remove('hidden');
+        previewFrame.classList.add('hidden');
+      } else {
+        htmlTab.classList.remove('active');
+        previewTab.classList.add('active');
+        codeOutput.classList.add('hidden');
+        previewFrame.classList.remove('hidden');
+
+        // Update preview
+        previewFrame.srcdoc = previewHtml || currentHtml;
+      }
+    }
+
+    function copyToClipboard() {
+      const codeOutput = document.getElementById('code-output');
+      navigator.clipboard.writeText(currentHtml).then(() => {
+        const status = document.getElementById('status');
+        status.classList.add('show');
+        setTimeout(() => {
+          status.classList.remove('show');
+        }, 2000);
+      });
+    }
+
+    function getSafeExportName() {
+      return currentName.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9._() -]/g, '_').replace(/_+/g, '_').replace(/^[_ .]+|[_ .]+$/g, '') || 'export';
+    }
+
+    function downloadHtml() {
+      const includeImages = document.getElementById('include-images').checked;
+      const safeName = getSafeExportName();
+
+      if (isMultiMode && multiFiles.length > 1) {
+        // Multiple HTMLs — always a ZIP
+        const entries = [];
+        const enc = new TextEncoder();
+        for (const f of multiFiles) {
+          if (!f || !f.name || typeof f.html !== 'string') continue;
+          entries.push({ name: f.name, data: enc.encode(f.html) });
+        }
+        if (includeImages) {
+          for (const asset of currentAssets || []) {
+            if (!asset || !asset.name || !asset.data) continue;
+            entries.push({ name: `images/${asset.name}`, data: base64ToUint8Array(asset.data) });
+          }
+        }
+        const zipBlob = buildZip(entries);
+        const url = URL.createObjectURL(zipBlob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${safeName}.zip`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showStatus(`Downloaded ZIP with ${multiFiles.length} files`);
+      } else if (includeImages && currentAssets.length > 0) {
+        // Single HTML + images — ZIP
+        const entries = [];
+        const enc = new TextEncoder();
+        entries.push({ name: `${safeName}.html`, data: enc.encode(currentHtml) });
+        for (const asset of currentAssets || []) {
+          if (!asset || !asset.name || !asset.data) continue;
+          entries.push({ name: `images/${asset.name}`, data: base64ToUint8Array(asset.data) });
+        }
+        const zipBlob = buildZip(entries);
+        const url = URL.createObjectURL(zipBlob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${safeName}.zip`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showStatus('Downloaded ZIP with HTML + images');
+      } else {
+        // Single HTML, no images — plain file
+        const blob = new Blob([currentHtml], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${safeName}.html`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+    }
+
+    function downloadImages() {
+      const assets = (currentAssets || []).filter(a => a && a.name && a.data);
+      if (assets.length === 0) {
+        showStatus('No images to download');
+        return;
+      }
+      const entries = assets.map(asset => ({
+        name: `images/${asset.name}`,
+        data: base64ToUint8Array(asset.data)
+      }));
+      const zipBlob = buildZip(entries);
+      const url = URL.createObjectURL(zipBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${getSafeExportName()}_images.zip`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showStatus(`Downloaded ${assets.length} images`);
+    }
+
+    function onFrameSelectChange() {
+      const select = document.getElementById('frame-select');
+      const idx = parseInt(select.value, 10);
+      if (isNaN(idx) || idx < 0 || idx >= multiFiles.length) return;
+      currentHtml = multiFiles[idx].html;
+      previewHtml = buildPreviewHtmlWithAssets(currentHtml, currentAssets);
+      document.getElementById('code-output').value = currentHtml;
+      // If on preview tab, refresh it
+      const previewFrame = document.getElementById('preview-frame');
+      if (!previewFrame.classList.contains('hidden')) {
+        previewFrame.srcdoc = previewHtml || currentHtml;
+      }
+    }
+
+
+
+    function downloadZip(files, assets, zipBaseName) {
+      const safeBase = String(zipBaseName || 'components')
+        .replace(/[^a-z0-9]/gi, '-')
+        .toLowerCase()
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '') || 'components';
+
+      const entries = [];
+      const enc = new TextEncoder();
+
+      for (const f of files || []) {
+        if (!f || !f.name || typeof f.html !== 'string') continue;
+        entries.push({ name: f.name, data: enc.encode(f.html) });
+      }
+
+      for (const asset of assets || []) {
+        if (!asset || !asset.name || !asset.data) continue;
+        const bytes = base64ToUint8Array(asset.data);
+        entries.push({ name: asset.name, data: bytes });
+      }
+
+      if (entries.length === 0) {
+        throw new Error('No files to zip.');
+      }
+
+      const zipBlob = buildZip(entries);
+      const url = URL.createObjectURL(zipBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${safeBase}.zip`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+
+    function refreshExport() {
+      hideAllPanels();
+      document.getElementById('loading').classList.remove('hidden');
+      const loadingText = document.getElementById('loading-text');
+      if (loadingText) loadingText.textContent = 'Processing your design...';
+      startWatchdog('Export');
+      parent.postMessage({ pluginMessage: { type: 'export' } }, '*');
+    }
+
+    function closePlugin() {
+      parent.postMessage({ pluginMessage: { type: 'close' } }, '*');
+    }
+
+    // Handle messages from the plugin
+    window.onmessage = (event) => {
+      const msg = event.data.pluginMessage;
+      stopWatchdog();
+
+      if (!msg || !msg.type) return;
+
+      if (msg.type === 'selection-candidates') {
+        showSelectionCandidates(msg.items, msg.defaultSelectedIds);
+      } else if (msg.type === 'success') {
+        currentHtml = msg.html;
+        currentAssets = Array.isArray(msg.assets) ? msg.assets : [];
+        currentName = msg.name;
+        isMultiMode = false;
+        multiFiles = [];
+
+        previewHtml = buildPreviewHtmlWithAssets(currentHtml, currentAssets);
+
+        hideAllPanels();
+        document.getElementById('result-container').classList.remove('hidden');
+        document.getElementById('frame-selector-row').classList.add('hidden');
+
+        document.getElementById('code-output').value = msg.html;
+        const ver = msg.version ? ' <span style="color:#666">(' + msg.version + ')</span>' : '';
+        document.getElementById('subtitle').innerHTML =
+          'Exported: <span class="frame-name">' + msg.name + '</span>' + ver;
+
+        showTab('html');
+      } else if (msg.type === 'loading') {
+        hideAllPanels();
+        document.getElementById('loading').classList.remove('hidden');
+        const loadingText = document.getElementById('loading-text');
+        if (loadingText) loadingText.textContent = msg.message || 'Processing your design...';
+      } else if (msg.type === 'components-success') {
+        const files = Array.isArray(msg.files) ? msg.files : [];
+        const assets = Array.isArray(msg.assets) ? msg.assets : [];
+        const pageName = msg.pageName || 'components';
+        const errors = Array.isArray(msg.errors) ? msg.errors : [];
+
+        hideAllPanels();
+        document.getElementById('result-container').classList.remove('hidden');
+
+        const ver = msg.version ? ' <span style="color:#666">(' + msg.version + ')</span>' : '';
+        document.getElementById('subtitle').innerHTML =
+          'Exported components: <span class="frame-name">' + (msg.count || files.length) + '</span>' + ver;
+
+        // If only one HTML file resulted, show it like a normal export (no ZIP required)
+        if (files.length === 1 && files[0] && typeof files[0].html === 'string') {
+          currentHtml = files[0].html;
+          currentAssets = assets;
+          const rawName = files[0].name || pageName || 'export';
+          const leaf = String(rawName).split('/').pop() || rawName;
+          currentName = String(leaf).replace(/\.html$/i, '');
+          previewHtml = buildPreviewHtmlWithAssets(currentHtml, currentAssets);
+          document.getElementById('code-output').value = currentHtml;
+          showTab('html');
+          showStatus(errors.length ? `Ready (${errors.length} errors)` : 'Ready');
+          return;
+        }
+
+        // Show a simple manifest in the code area (and any per-component errors)
+        const list = files.map(f => f && f.name ? f.name : '').filter(Boolean);
+        const errorLines = errors
+          .map(e => {
+            const name = e && e.component ? e.component : 'Unknown';
+            const id = e && e.id ? e.id : '';
+            const message = e && e.message ? e.message : 'Unknown error';
+            return `ERROR: ${name}${id ? ' (' + id + ')' : ''} - ${message}`;
+          })
+          .filter(Boolean);
+
+        if (!list.length && !errorLines.length) {
+          currentHtml = 'No component files generated.';
+        } else {
+          currentHtml = [
+            ...(list.length ? ['FILES:', ...list] : []),
+            ...(errorLines.length ? ['', 'ERRORS:', ...errorLines] : []),
+          ].join('\n');
+        }
+        currentAssets = assets;
+        currentName = pageName;
+        previewHtml = '';
+
+        document.getElementById('code-output').value = currentHtml;
+        showTab('html');
+
+        // Auto-download ZIP only when multiple HTML files are generated
+        if (files.length > 1) {
+          try {
+            downloadZip(files, assets, pageName);
+            showStatus(errors.length ? `Downloaded ZIP (${errors.length} errors)` : 'Downloaded ZIP');
+          } catch (e) {
+            showStatus('ZIP failed');
+          }
+        } else {
+          showStatus(errors.length ? `Ready (${errors.length} errors)` : 'Ready');
+        }
+      } else if (msg.type === 'multi-success') {
+        const files = Array.isArray(msg.files) ? msg.files : [];
+        const assets = Array.isArray(msg.assets) ? msg.assets : [];
+        const names = Array.isArray(msg.names) ? msg.names : [];
+        const errors = Array.isArray(msg.errors) ? msg.errors : [];
+
+        isMultiMode = true;
+        multiFiles = files;
+        currentAssets = assets;
+        currentName = names[0] || 'export';
+        currentHtml = files.length > 0 ? files[0].html : '';
+        previewHtml = buildPreviewHtmlWithAssets(currentHtml, currentAssets);
+
+        hideAllPanels();
+        document.getElementById('result-container').classList.remove('hidden');
+
+        // Populate frame selector
+        const select = document.getElementById('frame-select');
+        select.innerHTML = '';
+        for (let i = 0; i < files.length; i++) {
+          const opt = document.createElement('option');
+          opt.value = String(i);
+          const rawName = files[i].name || ('Frame ' + (i + 1));
+          opt.textContent = rawName.replace(/\.html$/i, '');
+          select.appendChild(opt);
+        }
+        document.getElementById('frame-selector-row').classList.remove('hidden');
+
+        document.getElementById('code-output').value = currentHtml;
+        const ver = msg.version ? ' <span style="color:#666">(' + msg.version + ')</span>' : '';
+        document.getElementById('subtitle').innerHTML =
+          'Exported: <span class="frame-name">' + files.length + ' variants</span>' + ver;
+
+        showTab('html');
+        showStatus(errors.length ? `Ready (${errors.length} errors)` : 'Ready');
+
+      } else if (msg.type === 'error') {
+        hideAllPanels();
+        document.getElementById('error-container').classList.remove('hidden');
+        document.getElementById('error-text').textContent = msg.message;
+      }
+    };
+  </script>
+</body>
+
+</html>

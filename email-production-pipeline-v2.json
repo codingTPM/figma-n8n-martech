@@ -1,0 +1,343 @@
+{
+  "name": "Email Production Pipeline v2 - Chat + Image + Gemini",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "# Email Production Pipeline v2\n\n## Two entry points:\n- **Chat UI** — paste HTML, upload design images, give feedback interactively\n- **Form** — structured input with all fields, good for handoffs\n\n## Setup Required:\n1. Add **Google Cloud (Service Account)** credentials for Vertex AI Gemini\n2. Configure your GCP **Project ID** in both Vertex model nodes\n3. Optionally configure SMTP, Jira, MarTech credentials for delivery\n\n## How it works:\n1. Submit via chat or form\n2. Agent processes HTML or rebuilds from image\n3. Agent applies POUR accessibility + dark mode\n4. You review and give feedback in chat\n5. Agent runs automated tests\n6. When approved → packages for delivery",
+        "height": 420,
+        "width": 380,
+        "color": 4
+      },
+      "id": "overview-sticky",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-300, 120]
+    },
+    {
+      "parameters": {
+        "content": "## Chat Entry Point\nUsers interact conversationally:\n- Paste Figma HTML\n- Upload design images (Gemini vision)\n- Share image URLs\n- Provide link mappings\n- Give iterative feedback\n- Approve for delivery",
+        "height": 180,
+        "width": 300,
+        "color": 7
+      },
+      "id": "chat-sticky",
+      "name": "Sticky Note1",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [120, 180]
+    },
+    {
+      "parameters": {
+        "content": "## Form Entry Point\nStructured input with fields for:\n- Campaign name\n- HTML paste or image URL\n- Link mappings\n- Image asset URLs\n- Brand guidelines\n- Proof email + Jira project\n\nForm data gets formatted and\nfed to the same AI Agent.",
+        "height": 200,
+        "width": 300,
+        "color": 5
+      },
+      "id": "form-sticky",
+      "name": "Sticky Note2",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [120, 700]
+    },
+    {
+      "parameters": {
+        "content": "## Agent Tools\n\n**Run Tests** — Automated accessibility,\ndark mode, heading hierarchy, alt text,\nfont size, link quality, and email\nbest practice checks.\n\n**Package Delivery** — Formats the final\nHTML + test report + brand notes into\nstructured output for email proof,\nJira ticket, and MarTech push.",
+        "height": 220,
+        "width": 300,
+        "color": 3
+      },
+      "id": "tools-sticky",
+      "name": "Sticky Note3",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [900, 580]
+    },
+    {
+      "parameters": {
+        "content": "## Delivery (Configure These)\n\nAfter the agent packages delivery,\nyou can add downstream nodes:\n\n1. **Send Email** node → SMTP creds\n2. **HTTP Request** → MarTech API\n3. **Jira** node → Jira Cloud creds\n\nConnect them to the agent's output\nfor automated delivery after approval.\n\nThe agent will tell you when the\npackage is ready.",
+        "height": 240,
+        "width": 300,
+        "color": 6
+      },
+      "id": "delivery-sticky",
+      "name": "Sticky Note4",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [1300, 180]
+    },
+    {
+      "parameters": {
+        "content": "## Google Vertex AI Setup\n\n1. Go to GCP Console → IAM → Service Accounts\n2. Create a service account with **Vertex AI User** role\n3. Download the JSON key file\n4. In n8n: Settings → Credentials → New → Google Cloud (Service Account)\n5. Paste the JSON key contents\n6. Set your **Project ID** in the model nodes below\n7. Enable the **Vertex AI API** in your GCP project\n\nModel: gemini-3.1-pro (multimodal, high quality)",
+        "height": 260,
+        "width": 340,
+        "color": 1
+      },
+      "id": "gcp-sticky",
+      "name": "Sticky Note5",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [380, 580]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "chat-trigger",
+      "name": "Chat Input",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [200, 400],
+      "webhookId": "email-pipeline-chat"
+    },
+    {
+      "parameters": {
+        "formTitle": "Email Production Pipeline",
+        "formDescription": "Submit a design for POUR-accessible email HTML production. You can provide either Figma HTML export or a design image URL.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Campaign Name",
+              "fieldType": "text",
+              "requiredField": true,
+              "placeholder": "e.g., Spring 2026 Newsletter"
+            },
+            {
+              "fieldLabel": "Input Type",
+              "fieldType": "dropdown",
+              "requiredField": true,
+              "fieldOptions": {
+                "values": [
+                  { "option": "Figma HTML Export" },
+                  { "option": "Design Image URL" }
+                ]
+              }
+            },
+            {
+              "fieldLabel": "Figma HTML Export",
+              "fieldType": "textarea",
+              "requiredField": false,
+              "placeholder": "Paste the complete HTML from DanHTML Figma export here (if using HTML input)..."
+            },
+            {
+              "fieldLabel": "Design Image URL",
+              "fieldType": "text",
+              "requiredField": false,
+              "placeholder": "https://example.com/design-screenshot.png (if using image input)"
+            },
+            {
+              "fieldLabel": "Link Mappings",
+              "fieldType": "textarea",
+              "requiredField": false,
+              "placeholder": "Header CTA → https://...\nFooter link → https://...\nLogo → https://..."
+            },
+            {
+              "fieldLabel": "Image Asset URLs",
+              "fieldType": "textarea",
+              "requiredField": false,
+              "placeholder": "Logo: https://...\nHero image: https://...\nProduct image: https://..."
+            },
+            {
+              "fieldLabel": "Brand Guidelines",
+              "fieldType": "textarea",
+              "requiredField": false,
+              "placeholder": "Primary color: #1A2B3C\nFont: Inter\nSpacing rules...\nTone of voice..."
+            },
+            {
+              "fieldLabel": "Proof Email Address",
+              "fieldType": "text",
+              "requiredField": false,
+              "placeholder": "reviewer@company.com"
+            },
+            {
+              "fieldLabel": "Jira Project Key",
+              "fieldType": "text",
+              "requiredField": false,
+              "placeholder": "e.g., CAMP or EMAIL"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "form-trigger",
+      "name": "Form Input",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.1,
+      "position": [200, 900],
+      "webhookId": "email-pipeline-form"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "chatInput",
+              "name": "chatInput",
+              "value": "=New campaign submission via form:\n\n**Campaign:** {{ $json['Campaign Name'] }}\n**Input Type:** {{ $json['Input Type'] }}\n\n{{ $json['Input Type'] === 'Figma HTML Export' ? '**Figma HTML:**\\n```\\n' + ($json['Figma HTML Export'] || 'No HTML provided') + '\\n```' : '**Design Image URL:** ' + ($json['Design Image URL'] || 'No image URL provided') }}\n\n**Link Mappings:**\n{{ $json['Link Mappings'] || 'None provided' }}\n\n**Image Asset URLs:**\n{{ $json['Image Asset URLs'] || 'None provided' }}\n\n**Brand Guidelines:**\n{{ $json['Brand Guidelines'] || 'None provided' }}\n\n**Proof Email:** {{ $json['Proof Email Address'] || 'Not specified' }}\n**Jira Project:** {{ $json['Jira Project Key'] || 'Not specified' }}\n\nPlease process this submission. Start by producing the clean, accessible HTML email, then run tests.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "prepare-form",
+      "name": "Prepare Form Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [500, 900]
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "You are an expert email production assistant working in a creative agency. You help users transform design inputs into clean, accessible, production-ready HTML emails.\n\n# YOUR CAPABILITIES\n\n1. **Accept Figma HTML exports** — Clean up bloated Figma-generated HTML/CSS into email-client-compatible code\n2. **Accept design images** — When a user shares a screenshot, mockup, or image URL, analyze it visually and rebuild it as clean HTML email code\n3. **Apply POUR accessibility** — Make all output fully WCAG accessible\n4. **Support dark mode** — Include proper dark mode CSS with Outlook compatibility\n5. **Validate against brand guidelines** — When provided, check colors, fonts, spacing, and tone\n6. **Run automated tests** — Use the `run_accessibility_tests` tool to validate your HTML\n7. **Package for delivery** — Use the `package_for_delivery` tool to format output for proof emails, Jira tickets, and MarTech platforms\n\n# WORKFLOW\n\n1. When a user provides input (HTML paste, image, or form submission), acknowledge what you received\n2. Process it into clean email HTML following ALL rules below\n3. Present the complete HTML to the user in a code block\n4. Ask if they want changes — iterate based on feedback\n5. When the user is satisfied, run the `run_accessibility_tests` tool on the final HTML\n6. Share test results and fix any issues\n7. When the user says \"approved\" or \"looks good\" or \"ship it\", use the `package_for_delivery` tool\n\n# EMAIL HTML BEST PRACTICES\n\n- Use table-based layout for maximum email client compatibility (Gmail, Outlook, Apple Mail, Yahoo)\n- Inline all critical CSS styles — email clients strip <style> blocks inconsistently\n- Include a <style> block too for clients that support it (progressive enhancement)\n- Use web-safe font stacks: Arial, Helvetica, Georgia, Times New Roman with proper fallbacks\n- Maximum content width: 600px for email body\n- Use HTML5 doctype: <!DOCTYPE html>\n- Include <meta charset=\"UTF-8\"> and <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n- Use bgcolor attribute alongside background-color CSS for Outlook compatibility\n- Prefer padding over margin (better email client support)\n- Use absolute URLs for all images and links\n- Remove all Figma-specific class names — use semantic, descriptive names\n- Simplify DOM structure — remove unnecessary wrapper elements\n- Add MSO conditional comments for Outlook-specific fixes where needed: <!--[if mso]> ... <![endif]-->\n\n# POUR ACCESSIBILITY REQUIREMENTS\n\n## Perceivable\n- **Alt Text**: Provide descriptive alt text for ALL meaningful images. Describe what the image shows and its purpose.\n- **Decorative Images**: Use alt=\"\" (empty alt) for purely decorative images so screen readers skip them.\n- **Color Contrast**: Minimum 4.5:1 contrast ratio for regular text (<18px). Minimum 3:1 for large text (18px+ or 14px+ bold).\n- **Typography**: Minimum font-size of 14px for body text. Never below 12px for anything.\n- **Color Independence**: Never rely solely on color to convey meaning — always pair with text labels, icons, or patterns.\n\n## Operable\n- **Clickable Areas**: All buttons and links must be at least 44x44 pixels. Use padding to achieve this.\n- **Link Text**: Use descriptive text. NEVER use \"click here\" or \"read more\" alone. Provide context: \"View our Spring 2026 collection\".\n- **Tab Order**: Ensure logical tab order follows visual reading order.\n\n## Understandable\n- **Headings**: Use <h1>, <h2>, <h3> in strict logical hierarchy. NEVER skip levels (no h1 → h3).\n- **Lists**: Use proper <ul><li> and <ol><li> markup. NEVER use manual bullets like \"• item\" in <p> tags.\n- **Alignment**: Left-align body text. Center-align only headings and CTAs when appropriate.\n- **Language**: Use clear, simple language.\n\n## Robust\n- **Language Tag**: Set lang attribute on <html>: <html lang=\"en\"> (or appropriate language).\n- **Table Roles**: Add role=\"presentation\" to ALL layout tables.\n- **Semantic HTML**: Use semantic elements where supported.\n- **Valid Markup**: Include proper DOCTYPE, meta charset, viewport.\n- **Linear Reading**: Content must make sense read top-to-bottom (screen reader order).\n\n# DARK MODE\n\n- Include @media (prefers-color-scheme: dark) { } in the <style> block\n- Add [data-ogsc] and [data-ogsb] selectors for Outlook dark mode\n- Add meta tags: <meta name=\"color-scheme\" content=\"light dark\"> and <meta name=\"supported-color-schemes\" content=\"light dark\">\n- Provide dark overrides for: background colors, text colors, border colors, link colors\n- Ensure images work on dark backgrounds (consider transparent PNGs)\n- Maintain WCAG contrast ratios in dark mode\n\n# IMAGE HANDLING\n\nWhen rebuilding from a design image:\n1. Analyze the visual layout, colors, typography, spacing, and structure\n2. Identify all sections: header, hero, body content, CTAs, footer\n3. Note exact colors (estimate hex values from the image)\n4. Rebuild as clean email HTML following all rules above\n5. Use placeholder image tags with descriptive alt text where actual image URLs aren't provided\n6. Ask the user to confirm colors and provide actual image/link URLs if not included\n\n# BRAND VALIDATION\n\nWhen brand guidelines are provided:\n1. Check all colors against the brand palette\n2. Verify font choices match brand standards\n3. Check spacing and layout against brand grid rules\n4. Verify logo placement and sizing\n5. Assess copy tone against brand voice guidelines\n6. Report any deviations with specific suggestions\n\n# RESPONSE FORMAT\n\n- When presenting HTML, wrap it in a code block so the user can copy it\n- After the code block, provide a brief summary of key decisions made\n- Always ask for feedback before proceeding to testing\n- Be specific when describing changes: mention exact CSS values, element names, and line references\n- Keep explanations concise but thorough"
+        }
+      },
+      "id": "agent",
+      "name": "Email Pipeline Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [800, 400]
+    },
+    {
+      "parameters": {
+        "modelName": "gemini-3.1-pro",
+        "options": {
+          "temperature": 0.2
+        }
+      },
+      "id": "vertex-model",
+      "name": "Google Vertex Gemini",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleVertex",
+      "typeVersion": 1,
+      "position": [620, 620],
+      "credentials": {
+        "googleApi": {
+          "id": "",
+          "name": ""
+        }
+      }
+    },
+    {
+      "parameters": {
+        "contextWindowLength": 20,
+        "sessionIdType": "customKey",
+        "sessionKey": "email-pipeline-session"
+      },
+      "id": "memory",
+      "name": "Conversation Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.2,
+      "position": [780, 620]
+    },
+    {
+      "parameters": {
+        "name": "run_accessibility_tests",
+        "description": "Run automated accessibility, dark mode, and email best practice tests on HTML email code. Pass the complete HTML string as input. Returns a detailed test report with passed checks, issues, and warnings.",
+        "jsCode": "// Automated Accessibility & Email Quality Tests\nconst html = query;\n\nif (!html || html.trim().length < 50) {\n  return 'ERROR: No valid HTML provided. Please pass the complete HTML email code to this tool.';\n}\n\nconst issues = [];\nconst warnings = [];\nconst passed = [];\n\n// === POUR: Robust - Language attribute ===\nif (/<html[^>]*lang\\s*=/i.test(html)) {\n  passed.push('HTML lang attribute present');\n} else {\n  issues.push('Missing lang attribute on <html> tag');\n}\n\n// === POUR: Understandable - Heading hierarchy ===\nconst headingMatches = [...html.matchAll(/<h([1-6])[^>]*>/gi)];\nconst headingLevels = headingMatches.map(m => parseInt(m[1]));\nlet headingOk = true;\nfor (let i = 1; i < headingLevels.length; i++) {\n  if (headingLevels[i] > headingLevels[i - 1] + 1) {\n    issues.push('Heading hierarchy skip: h' + headingLevels[i - 1] + ' jumps to h' + headingLevels[i]);\n    headingOk = false;\n  }\n}\nif (headingOk && headingLevels.length > 0) passed.push('Heading hierarchy correct (' + headingLevels.length + ' headings)');\nif (headingLevels.length === 0) warnings.push('No headings found - consider adding heading structure');\n\n// === POUR: Perceivable - Image alt text ===\nconst imgs = html.match(/<img[^>]*>/gi) || [];\nlet missingAlt = 0;\nfor (const img of imgs) {\n  if (!/alt\\s*=/i.test(img)) missingAlt++;\n}\nif (missingAlt > 0) issues.push(missingAlt + ' image(s) missing alt attribute');\nelse if (imgs.length > 0) passed.push('All ' + imgs.length + ' images have alt attributes');\n\n// === Dark Mode ===\nif (/@media[^{]*prefers-color-scheme\\s*:\\s*dark/i.test(html)) {\n  passed.push('Dark mode @media query present');\n} else {\n  issues.push('No @media (prefers-color-scheme: dark) found');\n}\nif (/color-scheme/i.test(html)) {\n  passed.push('color-scheme meta tag present');\n} else {\n  warnings.push('Missing color-scheme meta tag');\n}\nif (/data-og[sc][cb]/i.test(html)) {\n  passed.push('Outlook dark mode selectors present');\n} else {\n  warnings.push('Missing Outlook dark mode selectors ([data-ogsc]/[data-ogsb])');\n}\n\n// === POUR: Robust - Layout table roles ===\nconst tables = html.match(/<table[^>]*>/gi) || [];\nlet tablesWithoutRole = 0;\nfor (const table of tables) {\n  if (!/role\\s*=\\s*[\"']presentation[\"']/i.test(table)) tablesWithoutRole++;\n}\nif (tablesWithoutRole > 0) warnings.push(tablesWithoutRole + ' table(s) missing role=\"presentation\"');\nelse if (tables.length > 0) passed.push('All ' + tables.length + ' tables have role=\"presentation\"');\n\n// === POUR: Perceivable - Font sizes ===\nconst fontSizes = [...html.matchAll(/font-size\\s*:\\s*(\\d+(?:\\.\\d+)?)\\s*px/gi)];\nlet smallFonts = 0;\nfor (const fs of fontSizes) {\n  if (parseFloat(fs[1]) < 14) smallFonts++;\n}\nif (smallFonts > 0) warnings.push(smallFonts + ' font-size declaration(s) below 14px minimum');\nelse if (fontSizes.length > 0) passed.push('All font sizes meet 14px minimum');\n\n// === POUR: Understandable - List markup ===\nconst bulletChars = html.match(/[\\u2022\\u25CF\\u25E6\\u25AA\\u25AB\\u2023\\u2043]/g) || [];\nconst hasListTags = /<[uo]l[^>]*>/i.test(html);\nif (bulletChars.length > 0 && !hasListTags) {\n  issues.push('Manual bullet characters found (' + bulletChars.length + ') without proper <ul>/<ol> markup');\n} else {\n  passed.push('No manual bullet characters detected');\n}\n\n// === POUR: Operable - Link text quality ===\nconst links = [...html.matchAll(/<a[^>]*>([^<]*)<\\/a>/gi)];\nconst badTexts = ['click here', 'read more', 'learn more', 'here', 'link', 'more', 'click'];\nlet badLinks = [];\nfor (const link of links) {\n  const text = link[1].trim().toLowerCase();\n  if (badTexts.includes(text)) badLinks.push('\"' + link[1].trim() + '\"');\n}\nif (badLinks.length > 0) warnings.push('Non-descriptive link text found: ' + badLinks.join(', '));\nelse if (links.length > 0) passed.push('All ' + links.length + ' links have descriptive text');\n\n// === Email essentials ===\nif (/<!DOCTYPE html>/i.test(html)) passed.push('HTML5 DOCTYPE present');\nelse warnings.push('Missing HTML5 DOCTYPE');\n\nif (/meta[^>]*charset/i.test(html)) passed.push('Meta charset present');\nelse warnings.push('Missing meta charset');\n\nif (/meta[^>]*viewport/i.test(html)) passed.push('Meta viewport present');\nelse warnings.push('Missing meta viewport');\n\nif (/max-width|width\\s*:\\s*600/i.test(html)) passed.push('Email width constraint detected');\nelse warnings.push('No 600px max-width detected - emails should be max 600px wide');\n\n// === Build report ===\nconst status = issues.length === 0 ? 'ALL CHECKS PASSED' : 'ISSUES FOUND';\nlet report = '═══ ACCESSIBILITY & EMAIL TEST REPORT ═══\\n\\n';\nreport += 'Status: ' + status + '\\n';\nreport += 'Passed: ' + passed.length + ' | Issues: ' + issues.length + ' | Warnings: ' + warnings.length + '\\n\\n';\n\nif (passed.length > 0) {\n  report += '✅ PASSED:\\n' + passed.map(p => '  ✅ ' + p).join('\\n') + '\\n\\n';\n}\nif (issues.length > 0) {\n  report += '❌ ISSUES (must fix):\\n' + issues.map(i => '  ❌ ' + i).join('\\n') + '\\n\\n';\n}\nif (warnings.length > 0) {\n  report += '⚠️ WARNINGS (should fix):\\n' + warnings.map(w => '  ⚠️ ' + w).join('\\n') + '\\n\\n';\n}\n\nreturn report;"
+      },
+      "id": "test-tool",
+      "name": "Run Accessibility Tests",
+      "type": "@n8n/n8n-nodes-langchain.toolCode",
+      "typeVersion": 1,
+      "position": [940, 620]
+    },
+    {
+      "parameters": {
+        "name": "package_for_delivery",
+        "description": "Package the final approved HTML email for delivery. Pass a JSON string with these fields: html (the final HTML), campaignName, proofEmail, jiraProject, brandNotes, testSummary. Returns formatted delivery packages for email proof, Jira ticket, and MarTech push.",
+        "jsCode": "// Package for Delivery\nlet input;\ntry {\n  input = JSON.parse(query);\n} catch(e) {\n  return 'ERROR: Please pass a valid JSON string with fields: html, campaignName, proofEmail, jiraProject, brandNotes, testSummary';\n}\n\nconst html = input.html || '';\nconst campaignName = input.campaignName || 'Untitled Campaign';\nconst proofEmail = input.proofEmail || 'not specified';\nconst jiraProject = input.jiraProject || 'not specified';\nconst brandNotes = input.brandNotes || 'No brand notes';\nconst testSummary = input.testSummary || 'No test summary';\nconst timestamp = new Date().toISOString().split('T')[0];\n\nlet output = '═══ DELIVERY PACKAGE READY ═══\\n\\n';\noutput += 'Campaign: ' + campaignName + '\\n';\noutput += 'Date: ' + timestamp + '\\n\\n';\n\noutput += '── 1. PROOF EMAIL ──\\n';\noutput += 'To: ' + proofEmail + '\\n';\noutput += 'Subject: [Proof] ' + campaignName + ' - ' + timestamp + '\\n';\noutput += 'Body: The final HTML email has been produced and tested. Please review and reply with approval or feedback.\\n\\n';\n\noutput += '── 2. JIRA TICKET ──\\n';\noutput += 'Project: ' + jiraProject + '\\n';\noutput += 'Type: Task\\n';\noutput += 'Summary: [Email Build] ' + campaignName + ' - ' + timestamp + '\\n';\noutput += 'Description: Campaign email produced via automated pipeline.\\n';\noutput += 'Test Results: ' + testSummary + '\\n';\noutput += 'Brand Notes: ' + brandNotes + '\\n\\n';\n\noutput += '── 3. MARTECH PUSH ──\\n';\noutput += 'Campaign Name: ' + campaignName + '\\n';\noutput += 'HTML Length: ' + html.length + ' characters\\n';\noutput += 'Status: Ready for platform upload\\n\\n';\n\noutput += '── FINAL HTML ──\\n';\noutput += 'The approved HTML (' + html.length + ' chars) is ready. Copy from the conversation above or from the last code block shown.\\n\\n';\n\noutput += 'To automate delivery, connect Send Email, HTTP Request (MarTech), and Jira nodes downstream of this agent in the n8n workflow editor.';\n\nreturn output;"
+      },
+      "id": "delivery-tool",
+      "name": "Package for Delivery",
+      "type": "@n8n/n8n-nodes-langchain.toolCode",
+      "typeVersion": 1,
+      "position": [1100, 620]
+    }
+  ],
+  "connections": {
+    "Chat Input": {
+      "main": [
+        [
+          {
+            "node": "Email Pipeline Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Form Input": {
+      "main": [
+        [
+          {
+            "node": "Prepare Form Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Form Data": {
+      "main": [
+        [
+          {
+            "node": "Email Pipeline Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Vertex Gemini": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Email Pipeline Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Conversation Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Email Pipeline Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run Accessibility Tests": {
+      "ai_tool": [
+        [
+          {
+            "node": "Email Pipeline Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Package for Delivery": {
+      "ai_tool": [
+        [
+          {
+            "node": "Email Pipeline Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0
+}

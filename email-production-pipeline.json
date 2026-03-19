@@ -1,0 +1,421 @@
+{
+  "name": "Email Production Pipeline - Figma to MarTech",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "# Email Production Pipeline\n## Figma → Clean HTML → Brand Check → Test → Deliver\n\n**Setup Required:**\n1. Add **OpenAI API** credentials (for AI agents)\n2. Configure **SMTP email** credentials (for proofing)\n3. Add **Jira** credentials (for ticket creation)\n4. Set **MarTech endpoint** URL in HTTP Request node\n\n**How to use:**\n1. Export HTML from Daniel's DanHTML Figma plugin\n2. Open this workflow's form URL (shown when workflow is active)\n3. Paste the exported HTML + brand guidelines\n4. The pipeline processes everything automatically",
+        "height": 380,
+        "width": 340,
+        "color": 4
+      },
+      "id": "overview-sticky",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-260, 80]
+    },
+    {
+      "parameters": {
+        "content": "## Phase 1: Input\nUser submits Figma HTML export,\nbrand guidelines, and campaign info\nvia a web form.",
+        "height": 140,
+        "width": 280,
+        "color": 7
+      },
+      "id": "phase1-sticky",
+      "name": "Sticky Note1",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [120, 160]
+    },
+    {
+      "parameters": {
+        "content": "## Phase 2: POUR HTML Cleanup\nAI Agent transforms bloated Figma\nHTML into accessible, email-client-\ncompatible HTML/CSS with dark mode.",
+        "height": 140,
+        "width": 280,
+        "color": 1
+      },
+      "id": "phase2-sticky",
+      "name": "Sticky Note2",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [480, 160]
+    },
+    {
+      "parameters": {
+        "content": "## Phase 3: Automated Testing\nCode node runs accessibility,\ndark mode, link, and markup\nvalidation checks automatically.",
+        "height": 140,
+        "width": 280,
+        "color": 3
+      },
+      "id": "phase3-sticky",
+      "name": "Sticky Note3",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [860, 160]
+    },
+    {
+      "parameters": {
+        "content": "## Phase 4: Brand Validation\nAI Agent reviews the cleaned HTML\nagainst provided brand guidelines\n(colors, fonts, spacing, tone).",
+        "height": 140,
+        "width": 280,
+        "color": 5
+      },
+      "id": "phase4-sticky",
+      "name": "Sticky Note4",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [1240, 160]
+    },
+    {
+      "parameters": {
+        "content": "## Phase 5: Build Package\nAssembles final HTML, test report,\nand brand validation into a\ndelivery-ready package.",
+        "height": 140,
+        "width": 280,
+        "color": 2
+      },
+      "id": "phase5-sticky",
+      "name": "Sticky Note5",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [1620, 160]
+    },
+    {
+      "parameters": {
+        "content": "## Phase 6: Deliver\nSend proof email, push to MarTech,\nand create Jira ticket — all in\nparallel. Configure credentials!",
+        "height": 140,
+        "width": 280,
+        "color": 6
+      },
+      "id": "phase6-sticky",
+      "name": "Sticky Note6",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [2000, 160]
+    },
+    {
+      "parameters": {
+        "formTitle": "Email Production Pipeline",
+        "formDescription": "Submit Figma HTML export for POUR cleanup, brand validation, testing, and delivery.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Campaign Name",
+              "fieldType": "text",
+              "requiredField": true,
+              "placeholder": "e.g., Spring 2026 Newsletter"
+            },
+            {
+              "fieldLabel": "Figma HTML Export",
+              "fieldType": "textarea",
+              "requiredField": true,
+              "placeholder": "Paste the complete HTML from DanHTML Figma export here..."
+            },
+            {
+              "fieldLabel": "Brand Guidelines",
+              "fieldType": "textarea",
+              "requiredField": false,
+              "placeholder": "Paste brand guidelines: colors, fonts, spacing rules, tone of voice..."
+            },
+            {
+              "fieldLabel": "Proof Email Address",
+              "fieldType": "text",
+              "requiredField": true,
+              "placeholder": "reviewer@company.com"
+            },
+            {
+              "fieldLabel": "Jira Project Key",
+              "fieldType": "text",
+              "requiredField": false,
+              "placeholder": "e.g., CAMP or EMAIL"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "form-trigger",
+      "name": "Submit Figma HTML",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2,
+      "position": [180, 400],
+      "webhookId": "email-pipeline-form"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Transform this Figma-exported HTML/CSS into clean, production-ready email HTML. Apply all POUR accessibility rules and dark mode support as described in your instructions.\n\nHere is the Figma HTML export:\n\n{{ $json['Figma HTML Export'] }}",
+        "options": {
+          "systemMessage": "You are an expert HTML/CSS email developer specializing in accessibility and cross-client compatibility. Your job is to transform bloated Figma-exported HTML/CSS into clean, production-ready email HTML.\n\n## Email HTML Best Practices\n- Use table-based layout for maximum email client compatibility (Gmail, Outlook, Apple Mail, Yahoo)\n- Inline all critical CSS styles - email clients strip <style> blocks inconsistently\n- Use web-safe font stacks with proper fallbacks (Arial, Helvetica, sans-serif)\n- Maximum content width: 600px for the email body\n- Use HTML5 doctype: <!DOCTYPE html>\n- Include <meta charset=\"UTF-8\"> and <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n- Use bgcolor attribute alongside background-color CSS for Outlook compatibility\n- Prefer padding over margin for spacing (better email client support)\n- Use absolute URLs for all images\n- Remove all Figma-specific class names and IDs - use semantic, descriptive names\n- Remove unnecessary wrapper divs and simplify the DOM structure\n- Remove any inline styles that have no visual effect\n\n## POUR Accessibility Requirements\n\n### Perceivable\n- Alt Text: Always provide descriptive alt text for meaningful images. Describe what the image shows and why it matters.\n- Decorative Images: Use alt=\"\" (empty alt) for purely decorative images so screen readers skip them.\n- Color Contrast: Ensure minimum 4.5:1 contrast ratio for regular text and 3:1 for large text (18px+ or 14px+ bold).\n- Typography: Use minimum font-size of 14px for body text. Never go below 12px for any text.\n- Do NOT rely solely on color to convey meaning - always pair with text labels or icons.\n\n### Operable\n- Clickable Areas: All buttons and links must have a clickable area of at least 44x44 pixels. Use padding to achieve this.\n- Link Text: Use descriptive link text. Never use \"click here\" or \"read more\" alone - provide context like \"Read our Spring 2026 collection guide\".\n- Ensure a logical tab order follows the visual reading order.\n\n### Understandable\n- Headings: Use <h1>, <h2>, <h3> etc. in strict logical hierarchy. NEVER skip levels (e.g., no jumping from <h1> to <h3>).\n- Lists: Use proper <ul><li> and <ol><li> markup. NEVER use manual bullet characters like <p>bullet text</p> or <p>• item</p>.\n- Alignment: Left-align body text for readability. Center-align only headings and CTAs when appropriate.\n- Use clear, simple language throughout.\n\n### Robust\n- Language: Set the lang attribute on the <html> tag: <html lang=\"en\"> (or appropriate language code).\n- Tables: Add role=\"presentation\" to ALL tables used for layout (not data tables).\n- Use semantic HTML elements where email clients support them.\n- Include proper DOCTYPE, meta charset, and viewport tags.\n- Structure content so it makes sense when read linearly (as a screen reader would).\n\n## Dark Mode Support\n- Include a <style> block with @media (prefers-color-scheme: dark) containing dark mode overrides.\n- Also include [data-ogsc] and [data-ogsb] attribute selectors for Outlook dark mode compatibility.\n- Provide dark mode overrides for:\n  - Background colors (dark backgrounds for light sections)\n  - Text colors (light text on dark backgrounds)\n  - Border colors\n  - Link colors\n- Ensure images look good on dark backgrounds. For images with transparency, consider adding a subtle background.\n- Maintain WCAG contrast ratios in dark mode too.\n- Use a dark mode meta tag: <meta name=\"color-scheme\" content=\"light dark\">\n- Use a dark mode style tag: <meta name=\"supported-color-schemes\" content=\"light dark\">\n\n## Output Rules\n- Return ONLY the complete, ready-to-use HTML code.\n- Do NOT wrap it in markdown code fences.\n- Do NOT include any explanations, comments about what you changed, or preamble.\n- The output should start with <!DOCTYPE html> and end with </html>.\n- The HTML must be valid and complete - ready to send as an email."
+        }
+      },
+      "id": "pour-agent",
+      "name": "POUR HTML Cleanup",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1,
+      "position": [560, 400]
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o",
+        "options": {
+          "temperature": 0.2
+        }
+      },
+      "id": "openai-model-1",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1,
+      "position": [480, 620],
+      "credentials": {
+        "openAiApi": {
+          "id": "",
+          "name": ""
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Accessibility & Quality Tests\n// Runs automated checks on the cleaned HTML\n\nconst html = $input.first().json.output || $input.first().json.text || '';\nconst formData = $('Submit Figma HTML').first().json;\nconst campaignName = formData['Campaign Name'] || 'Untitled';\nconst brandGuidelines = formData['Brand Guidelines'] || '';\nconst proofEmail = formData['Proof Email Address'] || '';\nconst jiraProject = formData['Jira Project Key'] || '';\n\nconst issues = [];\nconst warnings = [];\nconst passed = [];\n\n// === POUR: Robust - Language attribute ===\nif (/<html[^>]*lang\\s*=/i.test(html)) {\n  passed.push('HTML lang attribute present');\n} else {\n  issues.push('Missing lang attribute on <html> tag');\n}\n\n// === POUR: Understandable - Heading hierarchy ===\nconst headingRegex = /<h([1-6])[^>]*>/gi;\nlet match;\nconst headingLevels = [];\nwhile ((match = headingRegex.exec(html)) !== null) {\n  headingLevels.push(parseInt(match[1]));\n}\nlet headingOk = true;\nfor (let i = 1; i < headingLevels.length; i++) {\n  if (headingLevels[i] > headingLevels[i - 1] + 1) {\n    issues.push('Heading hierarchy skip: h' + headingLevels[i - 1] + ' to h' + headingLevels[i]);\n    headingOk = false;\n  }\n}\nif (headingOk && headingLevels.length > 0) {\n  passed.push('Heading hierarchy is correct');\n}\n\n// === POUR: Perceivable - Image alt text ===\nconst imgRegex = /<img[^>]*>/gi;\nconst imgs = html.match(imgRegex) || [];\nlet imgIssues = 0;\nfor (const img of imgs) {\n  if (!/alt\\s*=/i.test(img)) {\n    issues.push('Image missing alt attribute');\n    imgIssues++;\n  }\n}\nif (imgIssues === 0 && imgs.length > 0) {\n  passed.push('All images have alt attributes (' + imgs.length + ' images)');\n}\n\n// === Dark Mode ===\nif (/@media[^{]*prefers-color-scheme\\s*:\\s*dark/i.test(html)) {\n  passed.push('Dark mode media query detected');\n} else {\n  warnings.push('No @media (prefers-color-scheme: dark) detected');\n}\n\n// === POUR: Robust - Layout table roles ===\nconst tableRegex = /<table[^>]*>/gi;\nconst tables = html.match(tableRegex) || [];\nlet tableIssues = 0;\nfor (const table of tables) {\n  if (!/role\\s*=\\s*[\"']presentation[\"']/i.test(table)) {\n    warnings.push('Layout table may need role=\"presentation\"');\n    tableIssues++;\n  }\n}\nif (tableIssues === 0 && tables.length > 0) {\n  passed.push('All tables have role=\"presentation\" (' + tables.length + ' tables)');\n}\n\n// === POUR: Perceivable - Font sizes ===\nconst fsRegex = /font-size\\s*:\\s*(\\d+(?:\\.\\d+)?)\\s*px/gi;\nlet fsMatch;\nlet smallFonts = 0;\nwhile ((fsMatch = fsRegex.exec(html)) !== null) {\n  const size = parseFloat(fsMatch[1]);\n  if (size < 14) {\n    warnings.push('Font size ' + size + 'px is below 14px minimum');\n    smallFonts++;\n  }\n}\nif (smallFonts === 0) {\n  passed.push('All font sizes meet 14px minimum');\n}\n\n// === POUR: Understandable - Proper list markup ===\nconst hasBulletChars = /[\\u2022\\u25CF\\u25E6\\u25AA\\u25AB\\u2023\\u2043]/g.test(html);\nconst hasListMarkup = /<[uo]l[^>]*>/i.test(html);\nif (hasBulletChars && !hasListMarkup) {\n  issues.push('Manual bullet characters found without proper <ul>/<ol> markup');\n} else {\n  passed.push('No manual bullet characters detected');\n}\n\n// === POUR: Operable - Link text quality ===\nconst linkRegex = /<a[^>]*>([^<]*)<\\/a>/gi;\nlet linkMatch;\nconst badLinkTexts = ['click here', 'read more', 'learn more', 'here', 'link', 'more'];\nwhile ((linkMatch = linkRegex.exec(html)) !== null) {\n  const text = linkMatch[1].trim().toLowerCase();\n  if (badLinkTexts.includes(text)) {\n    warnings.push('Non-descriptive link text: \"' + linkMatch[1].trim() + '\"');\n  }\n}\n\n// === Email best practices ===\nif (/<!DOCTYPE html>/i.test(html)) {\n  passed.push('HTML5 DOCTYPE present');\n} else {\n  warnings.push('Missing HTML5 DOCTYPE declaration');\n}\n\nif (/meta[^>]*charset/i.test(html)) {\n  passed.push('Meta charset present');\n} else {\n  warnings.push('Missing meta charset declaration');\n}\n\nif (/meta[^>]*viewport/i.test(html)) {\n  passed.push('Meta viewport present');\n} else {\n  warnings.push('Missing meta viewport for mobile responsiveness');\n}\n\n// === Build summary ===\nconst allPassed = issues.length === 0;\nconst summary = allPassed\n  ? 'ALL TESTS PASSED - ' + passed.length + ' checks OK, ' + warnings.length + ' warnings'\n  : 'ISSUES FOUND - ' + issues.length + ' issues, ' + warnings.length + ' warnings, ' + passed.length + ' passed';\n\nreturn [{\n  json: {\n    html,\n    campaignName,\n    brandGuidelines,\n    proofEmail,\n    jiraProject,\n    testsPassed: allPassed,\n    testReport: {\n      summary,\n      issueCount: issues.length,\n      warningCount: warnings.length,\n      passedCount: passed.length,\n      issues,\n      warnings,\n      passed\n    }\n  }\n}];"
+      },
+      "id": "test-code",
+      "name": "Accessibility & Quality Tests",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [940, 400]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Review this HTML email against the brand guidelines provided below. If no brand guidelines are provided, skip the review and just confirm the HTML looks professionally structured.\n\n## Brand Guidelines:\n{{ $json.brandGuidelines || 'No brand guidelines provided - just verify professional quality.' }}\n\n## Test Results So Far:\n{{ $json.testReport.summary }}\nIssues: {{ $json.testReport.issues.join(', ') || 'None' }}\nWarnings: {{ $json.testReport.warnings.join(', ') || 'None' }}\n\n## HTML to Review:\n{{ $json.html }}",
+        "options": {
+          "systemMessage": "You are a brand compliance reviewer for email marketing campaigns. Your task is to review HTML email code against brand guidelines.\n\nAnalyze the HTML for:\n1. **Color usage** - Do the colors match the brand palette? Flag any off-brand colors.\n2. **Typography** - Are the correct fonts, sizes, and weights used per brand standards?\n3. **Spacing and layout** - Does the layout follow brand spacing and grid rules?\n4. **Logo usage** - Is the logo placed and sized correctly per brand guidelines?\n5. **Tone and voice** - Does the copy match the brand's tone of voice?\n6. **Visual consistency** - Does the overall design feel on-brand?\n7. **Accessibility issues** - Note any remaining POUR concerns from the test results.\n\nProvide your response in this EXACT format:\n\n---\nBRAND VALIDATION REPORT\n\nOverall Score: [0-100]/100\nStatus: [PASS/NEEDS REVIEW/FAIL]\n\nColors: [PASS/FAIL] - [brief note]\nTypography: [PASS/FAIL] - [brief note]\nSpacing: [PASS/FAIL] - [brief note]\nLogo: [PASS/FAIL/NOT FOUND] - [brief note]\nTone: [PASS/FAIL] - [brief note]\nConsistency: [PASS/FAIL] - [brief note]\n\nIssues Found:\n- [list specific issues, or 'None']\n\nRecommendations:\n- [list specific suggestions, or 'None']\n---\n\nIf no brand guidelines were provided, give a general professional quality assessment and note that brand guidelines should be provided for a thorough review.\n\nBe specific and actionable in your feedback. Reference exact CSS values or HTML elements when possible."
+        }
+      },
+      "id": "brand-agent",
+      "name": "Brand Validation",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1,
+      "position": [1320, 400]
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o",
+        "options": {
+          "temperature": 0.3
+        }
+      },
+      "id": "openai-model-2",
+      "name": "OpenAI Chat Model1",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1,
+      "position": [1240, 620],
+      "credentials": {
+        "openAiApi": {
+          "id": "",
+          "name": ""
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Build Final Delivery Package\n// Assembles all results into a structured output for delivery\n\nconst brandOutput = $input.first().json.output || $input.first().json.text || 'No brand validation performed';\n\n// Get data passed through from earlier nodes\nconst testNode = $('Accessibility & Quality Tests').first().json;\nconst html = testNode.html || '';\nconst campaignName = testNode.campaignName || 'Untitled Campaign';\nconst proofEmail = testNode.proofEmail || '';\nconst jiraProject = testNode.jiraProject || '';\nconst testReport = testNode.testReport || {};\n\n// Build the proof email body with embedded HTML preview\nconst timestamp = new Date().toISOString().split('T')[0];\n\nconst emailBody = `\n<h2>Email Campaign Proof: ${campaignName}</h2>\n<p><strong>Date:</strong> ${timestamp}</p>\n<p><strong>Status:</strong> ${testReport.summary || 'N/A'}</p>\n\n<h3>Test Results</h3>\n<p><strong>Passed:</strong> ${testReport.passedCount || 0} checks</p>\n<p><strong>Issues:</strong> ${testReport.issueCount || 0}</p>\n<p><strong>Warnings:</strong> ${testReport.warningCount || 0}</p>\n${testReport.issues && testReport.issues.length > 0 ? '<ul>' + testReport.issues.map(i => '<li style=\"color:red\">' + i + '</li>').join('') + '</ul>' : '<p style=\"color:green\">No issues found!</p>'}\n${testReport.warnings && testReport.warnings.length > 0 ? '<h4>Warnings:</h4><ul>' + testReport.warnings.map(w => '<li style=\"color:orange\">' + w + '</li>').join('') + '</ul>' : ''}\n\n<h3>Brand Validation</h3>\n<pre style=\"background:#f5f5f5;padding:16px;border-radius:8px;white-space:pre-wrap;\">${brandOutput}</pre>\n\n<h3>HTML Preview</h3>\n<p>The production HTML is attached / included below for your review.</p>\n<hr>\n${html}\n`;\n\nconst jiraSummary = '[Email Campaign] ' + campaignName + ' - ' + timestamp;\nconst jiraDescription = 'Campaign: ' + campaignName + '\\n\\n'\n  + 'Test Results: ' + (testReport.summary || 'N/A') + '\\n\\n'\n  + 'Brand Validation:\\n' + brandOutput.substring(0, 1000) + '\\n\\n'\n  + 'Issues: ' + (testReport.issues ? testReport.issues.join(', ') : 'None') + '\\n'\n  + 'Warnings: ' + (testReport.warnings ? testReport.warnings.join(', ') : 'None');\n\nreturn [{\n  json: {\n    campaignName,\n    proofEmail,\n    jiraProject,\n    finalHtml: html,\n    emailSubject: 'Email Proof: ' + campaignName + ' - ' + timestamp,\n    emailBody,\n    jiraSummary,\n    jiraDescription,\n    brandValidation: brandOutput,\n    testReport,\n    timestamp\n  }\n}];"
+      },
+      "id": "build-package",
+      "name": "Build Final Package",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1700, 400]
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{ $json.proofEmail }}",
+        "toEmail": "={{ $json.proofEmail }}",
+        "subject": "={{ $json.emailSubject }}",
+        "emailType": "html",
+        "html": "={{ $json.emailBody }}",
+        "options": {}
+      },
+      "id": "send-email",
+      "name": "Send Proof Email",
+      "type": "n8n-nodes-base.sendEmail",
+      "typeVersion": 2,
+      "position": [2080, 340],
+      "credentials": {
+        "smtp": {
+          "id": "",
+          "name": ""
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://your-martech-platform.com/api/v1/campaigns",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_MARTECH_API_KEY"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "name",
+              "value": "={{ $json.campaignName }}"
+            },
+            {
+              "name": "html_content",
+              "value": "={{ $json.finalHtml }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "martech-push",
+      "name": "Push to MarTech",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [2080, 500],
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "resource": "issue",
+        "operation": "create",
+        "project": "={{ $json.jiraProject }}",
+        "issueType": "Task",
+        "summary": "={{ $json.jiraSummary }}",
+        "additionalFields": {
+          "description": "={{ $json.jiraDescription }}"
+        }
+      },
+      "id": "jira-ticket",
+      "name": "Create Jira Ticket",
+      "type": "n8n-nodes-base.jira",
+      "typeVersion": 1,
+      "position": [2080, 660],
+      "credentials": {
+        "jiraSoftwareCloudApi": {
+          "id": "",
+          "name": ""
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Phase 7: Feedback Loop (Future)\n\nTo add a feedback loop:\n1. Add a **Wait** node after Send Proof Email\n2. Configure it to wait for a webhook callback\n3. Include the callback URL in the proof email\n4. Add an **If** node to check if approved\n5. If changes needed → route to another\n   AI Agent that applies feedback\n6. Loop back to testing\n\nThis keeps the base workflow simple\nwhile allowing iteration.",
+        "height": 280,
+        "width": 300,
+        "color": 3
+      },
+      "id": "future-sticky",
+      "name": "Sticky Note7",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [2460, 320]
+    }
+  ],
+  "connections": {
+    "Submit Figma HTML": {
+      "main": [
+        [
+          {
+            "node": "POUR HTML Cleanup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "POUR HTML Cleanup",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "POUR HTML Cleanup": {
+      "main": [
+        [
+          {
+            "node": "Accessibility & Quality Tests",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Accessibility & Quality Tests": {
+      "main": [
+        [
+          {
+            "node": "Brand Validation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Brand Validation",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Brand Validation": {
+      "main": [
+        [
+          {
+            "node": "Build Final Package",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Final Package": {
+      "main": [
+        [
+          {
+            "node": "Send Proof Email",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Push to MarTech",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Create Jira Ticket",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0
+}

@@ -1,0 +1,13 @@
+# Dependencies
+node_modules/
+
+# Backups
+*.tar.gz
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# Test scratch files
+test.html
+test_output.html

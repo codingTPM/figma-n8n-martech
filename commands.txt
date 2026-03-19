@@ -1,0 +1,20 @@
+n8n Docker Commands
+====================
+Run all commands from the N8N project folder.
+
+Start n8n:              docker compose up -d
+Stop n8n:               docker compose down
+View live logs:         docker compose logs -f
+Restart n8n:            docker compose down; docker compose up -d
+Update to latest:       docker compose pull; docker compose down; docker compose up -d
+Check status:           docker compose ps
+
+Access n8n:             http://localhost:5678
+
+Data Storage
+====================
+Data is stored in a Docker volume (n8n_n8n_data).
+Workflows, credentials, and settings persist across restarts.
+
+Export/backup volume:   docker run --rm -v n8n_n8n_data:/data -v .:/backup alpine tar czf /backup/n8n_backup.tar.gz -C /data .
+Restore from backup:    docker run --rm -v n8n_n8n_data:/data -v .:/backup alpine tar xzf /backup/n8n_backup.tar.gz -C /data
