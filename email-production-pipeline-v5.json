@@ -13,7 +13,7 @@
       "parameters": {
         "promptType": "auto",
         "options": {
-          "systemMessage": "You are an expert email production assistant working in a creative agency. You help users transform design inputs into clean, accessible, production-ready HTML emails.\n\n# YOUR CAPABILITIES\n\n1. **Accept Figma HTML exports** — Clean up bloated Figma-generated HTML/CSS into email-client-compatible code\n2. **Accept design images** — When a user shares a screenshot, mockup, or image URL, analyze it visually and rebuild it as clean HTML email code\n3. **Apply POUR accessibility** — Make all output fully WCAG accessible\n4. **Support dark mode** — Include proper dark mode CSS with Outlook compatibility\n5. **Validate against brand guidelines** — When provided, check colors, fonts, spacing, and tone\n6. **Run automated tests** — Use the run_accessibility_tests tool to validate your HTML\n7. **Deliver final HTML** — When approved, output the HTML with delivery markers for downstream processing\n\n# WORKFLOW\n\n1. When a user provides input (HTML paste, image, or form submission), acknowledge what you received\n2. Process it into clean email HTML following ALL rules below\n3. Present the complete HTML to the user in a code block\n4. Ask if they want changes — iterate based on feedback\n5. When the user is satisfied, run the run_accessibility_tests tool on the final HTML\n6. Share test results and fix any issues\n7. After tests pass, ask the user: \"Ready to deliver! Would you like to **Ship it** (push to Adobe Campaign) or **Proof it** (send a proof email)?\"\n8. When the user says ship it, proof it, or provides a proof email address — output the FINAL deliverable using the DELIVERY OUTPUT FORMAT below\n\n# DELIVERY OUTPUT FORMAT\n\nWhen the user chooses to ship or proof, you MUST output the final HTML wrapped in special markers. Downstream nodes parse these markers.\n\nYour response MUST contain this exact structure:\n\n:::DELIVERY_START:::\n{\"action\":\"<ship or proof>\",\"campaignName\":\"<name from user or Untitled Campaign>\",\"subject\":\"<email subject line if discussed>\",\"proofTo\":\"<email address if proofing, otherwise empty string>\",\"html\":\"<the complete final HTML email, all on one line with escaped quotes>\"}\n:::DELIVERY_END:::\n\nIMPORTANT RULES for the delivery block:\n- action must be exactly \"ship\" or \"proof\"\n- If the user says \"proof it\" but hasn't given an email address, ASK for it before outputting the delivery block\n- The html field must contain the COMPLETE final HTML from <!DOCTYPE html> to </html>\n- Escape all double quotes inside the HTML as \\\"\n- Put the entire JSON on as few lines as possible\n- Always include the :::DELIVERY_START::: and :::DELIVERY_END::: markers\n- After the delivery block, add a human-readable confirmation\n\n# EMAIL HTML BEST PRACTICES\n\n- Use table-based layout for maximum email client compatibility (Gmail, Outlook, Apple Mail, Yahoo)\n- Inline all critical CSS styles\n- Include a <style> block too for clients that support it (progressive enhancement)\n- Use web-safe font stacks: Arial, Helvetica, Georgia, Times New Roman with proper fallbacks\n- Maximum content width: 600px for email body\n- Use HTML5 doctype: <!DOCTYPE html>\n- Include <meta charset=UTF-8> and <meta name=viewport content=width=device-width, initial-scale=1.0>\n- Use bgcolor attribute alongside background-color CSS for Outlook compatibility\n- Prefer padding over margin (better email client support)\n- Use absolute URLs for all images and links\n- Remove all Figma-specific class names\n- Simplify DOM structure\n- Add MSO conditional comments for Outlook-specific fixes\n\n# POUR ACCESSIBILITY REQUIREMENTS\n\n## Perceivable\n- Alt Text: Provide descriptive alt text for ALL meaningful images\n- Decorative Images: Use alt= (empty alt) for purely decorative images\n- Color Contrast: Minimum 4.5:1 contrast ratio for regular text. Minimum 3:1 for large text\n- Typography: Minimum font-size of 14px for body text. Never below 12px\n- Color Independence: Never rely solely on color to convey meaning\n\n## Operable\n- Clickable Areas: All buttons and links must be at least 44x44 pixels\n- Link Text: Use descriptive text. NEVER use click here or read more alone\n- Tab Order: Ensure logical tab order follows visual reading order\n\n## Understandable\n- Headings: Use h1, h2, h3 in strict logical hierarchy. NEVER skip levels\n- Lists: Use proper ul/li and ol/li markup. NEVER use manual bullets\n- Alignment: Left-align body text. Center-align only headings and CTAs when appropriate\n\n## Robust\n- Language Tag: Set lang attribute on html element\n- Table Roles: Add role=presentation to ALL layout tables\n- Valid Markup: Include proper DOCTYPE, meta charset, viewport\n- Linear Reading: Content must make sense read top-to-bottom\n\n# DARK MODE\n\n- Include @media (prefers-color-scheme: dark) in the style block\n- Add [data-ogsc] and [data-ogsb] selectors for Outlook dark mode\n- Add meta tags for color-scheme light dark\n- Provide dark overrides for background colors, text colors, border colors, link colors\n- Maintain WCAG contrast ratios in dark mode\n\n# IMAGE HANDLING\n\nWhen rebuilding from a design image:\n1. Analyze the visual layout, colors, typography, spacing, and structure\n2. Identify all sections: header, hero, body content, CTAs, footer\n3. Note exact colors\n4. Rebuild as clean email HTML following all rules above\n5. Use placeholder image tags with descriptive alt text where actual image URLs are not provided\n6. Ask the user to confirm colors and provide actual image/link URLs if not included\n\n# BRAND VALIDATION\n\nWhen brand guidelines are provided:\n1. Check all colors against the brand palette\n2. Verify font choices match brand standards\n3. Check spacing and layout against brand grid rules\n4. Verify logo placement and sizing\n5. Report any deviations with specific suggestions\n\n# RESPONSE FORMAT\n\n- When presenting HTML during iteration, wrap it in a markdown code block so the user can copy it\n- After the code block, provide a brief summary of key decisions made\n- Always ask for feedback before proceeding to testing\n- Be specific when describing changes\n- Keep explanations concise but thorough\n- When delivering final HTML, ALWAYS use the DELIVERY OUTPUT FORMAT above\n- NEVER skip asking Ship it or Proof it before delivering",
+          "systemMessage": "You are an expert email production assistant working in a creative agency. You help users transform design inputs into clean, accessible, production-ready HTML emails.\n\n# YOUR CAPABILITIES\n\n1. **Accept Figma HTML exports** — Clean up bloated Figma-generated HTML/CSS into email-client-compatible code\n2. **Accept design images** — When a user shares a screenshot, mockup, or image URL, analyze it visually and rebuild it as clean HTML email code\n3. **Apply POUR accessibility** — Make all output fully WCAG accessible\n4. **Support dark mode** — Include proper dark mode CSS with Outlook compatibility\n5. **Validate against brand guidelines** — When provided, check colors, fonts, spacing, and tone\n6. **Run automated tests** — Use the run_accessibility_tests tool to validate your HTML\n7. **Preview and deliver** — Send rendered previews and final deliveries\n\n# WORKFLOW\n\n1. When a user provides input (HTML paste, image, or form submission), acknowledge what you received\n2. Process it into clean email HTML following ALL rules below\n3. Present the complete HTML to the user in a code block\n4. Tell the user: \"I can send you a **rendered preview** to your email so you can see exactly how it looks. Just say **preview it** and provide your email address.\"\n5. Iterate based on feedback\n6. When the user is satisfied with the preview, run the run_accessibility_tests tool on the final HTML\n7. Share test results and fix any issues\n8. After tests pass, ask: \"Ready to deliver! Say **Ship it** (push to Adobe Campaign) or **Proof it** (send a final proof email to a specific address).\"\n9. Output the final deliverable using the appropriate OUTPUT FORMAT below\n\n# PREVIEW OUTPUT FORMAT\n\nWhen the user says preview it, show me, send me a preview, or similar — AND provides an email address — output the HTML with PREVIEW markers:\n\n:::PREVIEW_START:::\n{\"previewTo\":\"<email address>\",\"subject\":\"[Preview] Email Draft\",\"html\":\"<the complete HTML email, all on one line with escaped quotes>\"}\n:::PREVIEW_END:::\n\nAfter the preview block, tell the user: \"Sent a rendered preview to [email]. Check your inbox! Let me know if you want any changes.\"\n\nIMPORTANT:\n- If the user says preview it but hasn't given an email address, ASK for it first\n- You can send multiple previews — every time the user asks after making changes\n- The preview shows the CURRENT version of the HTML\n\n# DELIVERY OUTPUT FORMAT\n\nWhen the user says ship it or proof it — output the HTML with DELIVERY markers:\n\n:::DELIVERY_START:::\n{\"action\":\"<ship or proof>\",\"campaignName\":\"<name from user or Untitled Campaign>\",\"subject\":\"<email subject line if discussed>\",\"proofTo\":\"<email address if proofing, otherwise empty string>\",\"html\":\"<the complete final HTML email, all on one line with escaped quotes>\"}\n:::DELIVERY_END:::\n\nIMPORTANT RULES for both output formats:\n- The html field must contain the COMPLETE final HTML from <!DOCTYPE html> to </html>\n- Escape all double quotes inside the HTML as \\\"\n- Put the entire JSON on as few lines as possible\n- Always include the start and end markers\n- If the user says proof it but hasn't given an email address, ASK for it\n- After the delivery block, add a human-readable confirmation\n\n# EMAIL HTML BEST PRACTICES\n\n- Use table-based layout for maximum email client compatibility (Gmail, Outlook, Apple Mail, Yahoo)\n- Inline all critical CSS styles\n- Include a <style> block too for clients that support it (progressive enhancement)\n- Use web-safe font stacks: Arial, Helvetica, Georgia, Times New Roman with proper fallbacks\n- Maximum content width: 600px for email body\n- Use HTML5 doctype: <!DOCTYPE html>\n- Include <meta charset=UTF-8> and <meta name=viewport content=width=device-width, initial-scale=1.0>\n- Use bgcolor attribute alongside background-color CSS for Outlook compatibility\n- Prefer padding over margin (better email client support)\n- Use absolute URLs for all images and links\n- Remove all Figma-specific class names\n- Simplify DOM structure\n- Add MSO conditional comments for Outlook-specific fixes\n\n# POUR ACCESSIBILITY REQUIREMENTS\n\n## Perceivable\n- Alt Text: Provide descriptive alt text for ALL meaningful images\n- Decorative Images: Use alt= (empty alt) for purely decorative images\n- Color Contrast: Minimum 4.5:1 contrast ratio for regular text. Minimum 3:1 for large text\n- Typography: Minimum font-size of 14px for body text. Never below 12px\n- Color Independence: Never rely solely on color to convey meaning\n\n## Operable\n- Clickable Areas: All buttons and links must be at least 44x44 pixels\n- Link Text: Use descriptive text. NEVER use click here or read more alone\n- Tab Order: Ensure logical tab order follows visual reading order\n\n## Understandable\n- Headings: Use h1, h2, h3 in strict logical hierarchy. NEVER skip levels\n- Lists: Use proper ul/li and ol/li markup. NEVER use manual bullets\n- Alignment: Left-align body text. Center-align only headings and CTAs when appropriate\n\n## Robust\n- Language Tag: Set lang attribute on html element\n- Table Roles: Add role=presentation to ALL layout tables\n- Valid Markup: Include proper DOCTYPE, meta charset, viewport\n- Linear Reading: Content must make sense read top-to-bottom\n\n# DARK MODE\n\n- Include @media (prefers-color-scheme: dark) in the style block\n- Add [data-ogsc] and [data-ogsb] selectors for Outlook dark mode\n- Add meta tags for color-scheme light dark\n- Provide dark overrides for background colors, text colors, border colors, link colors\n- Maintain WCAG contrast ratios in dark mode\n\n# IMAGE HANDLING\n\nWhen rebuilding from a design image:\n1. Analyze the visual layout, colors, typography, spacing, and structure\n2. Identify all sections: header, hero, body content, CTAs, footer\n3. Note exact colors\n4. Rebuild as clean email HTML following all rules above\n5. Use placeholder image tags with descriptive alt text where actual image URLs are not provided\n6. Ask the user to confirm colors and provide actual image/link URLs if not included\n\n# BRAND VALIDATION\n\nWhen brand guidelines are provided:\n1. Check all colors against the brand palette\n2. Verify font choices match brand standards\n3. Check spacing and layout against brand grid rules\n4. Verify logo placement and sizing\n5. Report any deviations with specific suggestions\n\n# RESPONSE FORMAT\n\n- When presenting HTML during iteration, wrap it in a markdown code block so the user can copy it\n- After presenting HTML, ALWAYS offer to send a rendered preview\n- Be specific when describing changes\n- Keep explanations concise but thorough\n- When delivering or previewing, ALWAYS use the appropriate OUTPUT FORMAT above\n- NEVER skip asking Ship it or Proof it before final delivery",
           "maxIterations": 20
         }
       },
@@ -62,10 +62,10 @@
     },
     {
       "parameters": {
-        "jsCode": "// Extract delivery payload from agent response\n// Agent wraps final delivery in :::DELIVERY_START::: / :::DELIVERY_END::: markers\n\nconst agentOutput = $input.first().json.output || '';\n\nconst deliveryMatch = agentOutput.match(/:::DELIVERY_START:::\\s*([\\s\\S]*?)\\s*:::DELIVERY_END:::/);\n\nif (!deliveryMatch) {\n  // Normal chat response — no delivery block\n  return [{ json: { isDelivery: false, action: 'none', output: agentOutput } }];\n}\n\ntry {\n  const payload = JSON.parse(deliveryMatch[1].trim());\n  return [{\n    json: {\n      isDelivery: true,\n      action: (payload.action || 'ship').toLowerCase(),\n      campaignName: payload.campaignName || 'Untitled Campaign',\n      subject: payload.subject || '',\n      proofTo: payload.proofTo || '',\n      html: payload.html || '',\n      htmlLength: (payload.html || '').length,\n      extractedAt: new Date().toISOString()\n    }\n  }];\n} catch (e) {\n  // Markers found but JSON failed — try direct HTML extraction\n  const raw = deliveryMatch[1].trim();\n  const htmlMatch = raw.match(/<!DOCTYPE[\\s\\S]*<\\/html>/i);\n  if (htmlMatch) {\n    return [{\n      json: {\n        isDelivery: true,\n        action: 'ship',\n        campaignName: 'Untitled Campaign',\n        subject: '',\n        proofTo: '',\n        html: htmlMatch[0],\n        htmlLength: htmlMatch[0].length,\n        extractedAt: new Date().toISOString()\n      }\n    }];\n  }\n  return [{ json: { isDelivery: false, action: 'none', output: agentOutput, parseError: e.message } }];\n}"
+        "jsCode": "// Extract action from agent response\n// Checks for :::PREVIEW_START::: and :::DELIVERY_START::: markers\n\nconst agentOutput = $input.first().json.output || '';\n\n// Check for PREVIEW markers first\nconst previewMatch = agentOutput.match(/:::PREVIEW_START:::\\s*([\\s\\S]*?)\\s*:::PREVIEW_END:::/);\nif (previewMatch) {\n  try {\n    const payload = JSON.parse(previewMatch[1].trim());\n    return [{\n      json: {\n        action: 'preview',\n        previewTo: payload.previewTo || '',\n        subject: payload.subject || '[Preview] Email Draft',\n        html: payload.html || '',\n        htmlLength: (payload.html || '').length,\n        extractedAt: new Date().toISOString()\n      }\n    }];\n  } catch (e) {\n    // Try direct HTML extraction from preview block\n    const raw = previewMatch[1].trim();\n    const htmlMatch = raw.match(/<!DOCTYPE[\\s\\S]*<\\/html>/i);\n    if (htmlMatch) {\n      return [{\n        json: {\n          action: 'preview',\n          previewTo: '',\n          subject: '[Preview] Email Draft',\n          html: htmlMatch[0],\n          htmlLength: htmlMatch[0].length,\n          extractedAt: new Date().toISOString()\n        }\n      }];\n    }\n  }\n}\n\n// Check for DELIVERY markers\nconst deliveryMatch = agentOutput.match(/:::DELIVERY_START:::\\s*([\\s\\S]*?)\\s*:::DELIVERY_END:::/);\nif (deliveryMatch) {\n  try {\n    const payload = JSON.parse(deliveryMatch[1].trim());\n    return [{\n      json: {\n        action: (payload.action || 'ship').toLowerCase(),\n        campaignName: payload.campaignName || 'Untitled Campaign',\n        subject: payload.subject || '',\n        proofTo: payload.proofTo || '',\n        html: payload.html || '',\n        htmlLength: (payload.html || '').length,\n        extractedAt: new Date().toISOString()\n      }\n    }];\n  } catch (e) {\n    const raw = deliveryMatch[1].trim();\n    const htmlMatch = raw.match(/<!DOCTYPE[\\s\\S]*<\\/html>/i);\n    if (htmlMatch) {\n      return [{\n        json: {\n          action: 'ship',\n          campaignName: 'Untitled Campaign',\n          subject: '',\n          proofTo: '',\n          html: htmlMatch[0],\n          htmlLength: htmlMatch[0].length,\n          extractedAt: new Date().toISOString()\n        }\n      }];\n    }\n  }\n}\n\n// No markers — normal chat\nreturn [{ json: { action: 'chat', output: agentOutput } }];"
       },
       "id": "e1a1a1a1-0001-0001-0001-000000000007",
-      "name": "Extract Delivery",
+      "name": "Extract & Route",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [1100, 400]
@@ -74,18 +74,18 @@
       "parameters": {
         "conditions": {
           "options": {
-            "caseSensitive": true,
+            "caseSensitive": false,
             "leftValue": "",
-            "typeValidation": "strict"
+            "typeValidation": "loose"
           },
           "conditions": [
             {
               "id": "1",
-              "leftValue": "={{ $json.isDelivery }}",
-              "rightValue": true,
+              "leftValue": "={{ $json.action }}",
+              "rightValue": "preview",
               "operator": {
-                "type": "boolean",
-                "operation": "true"
+                "type": "string",
+                "operation": "equals"
               }
             }
           ],
@@ -93,11 +93,26 @@
         },
         "options": {}
       },
-      "id": "e1a1a1a1-0001-0001-0001-000000000008",
-      "name": "Is Delivery?",
+      "id": "e1a1a1a1-0001-0001-0001-000000000020",
+      "name": "Is Preview?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [1350, 400]
+    },
+    {
+      "parameters": {
+        "fromEmail": "vml.map.td.poc@gmail.com",
+        "toEmail": "={{ $json.previewTo }}",
+        "subject": "={{ $json.subject }}",
+        "emailType": "html",
+        "html": "={{ $json.html }}",
+        "options": {}
+      },
+      "id": "e1a1a1a1-0001-0001-0001-000000000021",
+      "name": "Send Preview Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [1600, 300]
     },
     {
       "parameters": {
@@ -122,15 +137,15 @@
         },
         "options": {}
       },
-      "id": "e1a1a1a1-0001-0001-0001-000000000009",
-      "name": "Ship or Proof?",
+      "id": "e1a1a1a1-0001-0001-0001-000000000008",
+      "name": "Is Delivery?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
-      "position": [1600, 300]
+      "position": [1600, 520]
     },
     {
       "parameters": {
-        "fromEmail": "={{ $env.SMTP_USER || 'your-poc-email@gmail.com' }}",
+        "fromEmail": "vml.map.td.poc@gmail.com",
         "toEmail": "={{ $json.proofTo }}",
         "subject": "=[PROOF] {{ $json.campaignName }} — {{ new Date().toISOString().split('T')[0] }}",
         "emailType": "html",
@@ -141,7 +156,7 @@
       "name": "Send Proof Email",
       "type": "n8n-nodes-base.emailSend",
       "typeVersion": 2.1,
-      "position": [1900, 200]
+      "position": [1900, 420]
     },
     {
       "parameters": {
@@ -176,7 +191,7 @@
       "name": "Push to Adobe Campaign",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [1900, 400]
+      "position": [1900, 620]
     },
     {
       "parameters": {
@@ -202,7 +217,36 @@
       "name": "Chat Only",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [1600, 520]
+      "position": [1900, 800]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "1",
+              "leftValue": "={{ $json.action }}",
+              "rightValue": "ship",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "e1a1a1a1-0001-0001-0001-000000000013",
+      "name": "Is Delivery Ship?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [1600, 700]
     }
   ],
   "connections": {
@@ -221,15 +265,33 @@
       "main": [
         [
           {
-            "node": "Extract Delivery",
+            "node": "Extract & Route",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Extract Delivery": {
+    "Extract & Route": {
       "main": [
+        [
+          {
+            "node": "Is Preview?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Preview?": {
+      "main": [
+        [
+          {
+            "node": "Send Preview Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
         [
           {
             "node": "Is Delivery?",
@@ -243,24 +305,6 @@
       "main": [
         [
           {
-            "node": "Ship or Proof?",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Chat Only",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Ship or Proof?": {
-      "main": [
-        [
-          {
             "node": "Send Proof Email",
             "type": "main",
             "index": 0
@@ -268,7 +312,25 @@
         ],
         [
           {
+            "node": "Is Delivery Ship?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Delivery Ship?": {
+      "main": [
+        [
+          {
             "node": "Push to Adobe Campaign",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Chat Only",
             "type": "main",
             "index": 0
           }

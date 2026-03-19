@@ -18,3 +18,11 @@ Workflows, credentials, and settings persist across restarts.
 
 Export/backup volume:   docker run --rm -v n8n_n8n_data:/data -v .:/backup alpine tar czf /backup/n8n_backup.tar.gz -C /data .
 Restore from backup:    docker run --rm -v n8n_n8n_data:/data -v .:/backup alpine tar xzf /backup/n8n_backup.tar.gz -C /data
+
+
+====================
+The proof email setup
+Email: vml.map.td.poc@gmail.com
+Password: VMLMAPruletheschool01!
+App password: wjau hjun qtgq nzrf
+SMTP: smtp.gmail.com, port 465, SSL on
