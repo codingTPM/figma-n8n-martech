@@ -1,0 +1,873 @@
+<html data-type="html" data-identifier="38ad20ee-8e22-4655-afde-a95e5e7ee6f7" data-title="Email Production Pipeline — Architectural Overview" data-version="2" width="1200" height="4200"><head>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: #0a0e1a;
+    color: #c9d1d9;
+    line-height: 1.7;
+    padding: 48px;
+    min-height: 100vh;
+  }
+
+  .container { max-width: 1100px; margin: 0 auto; }
+
+  .header {
+    border-bottom: 1px solid rgba(88, 166, 255, 0.15);
+    padding-bottom: 36px;
+    margin-bottom: 48px;
+  }
+  .header h1 {
+    font-size: 32px;
+    font-weight: 800;
+    background: linear-gradient(135deg, #58a6ff, #a78bfa, #f472b6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 16px;
+    letter-spacing: -0.5px;
+  }
+  .status-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 12px;
+  }
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .badge-poc { background: rgba(251, 191, 36, 0.12); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.25); }
+  .badge-stack { background: rgba(88, 166, 255, 0.1); color: #58a6ff; border: 1px solid rgba(88, 166, 255, 0.2); }
+  .badge-gcp { background: rgba(52, 211, 153, 0.1); color: #34d399; border: 1px solid rgba(52, 211, 153, 0.2); }
+
+  .section {
+    margin-bottom: 48px;
+  }
+  .section-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #e6edf3;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-title .icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+
+  .desc-box {
+    background: rgba(88, 166, 255, 0.04);
+    border: 1px solid rgba(88, 166, 255, 0.1);
+    border-radius: 12px;
+    padding: 24px;
+    font-size: 15px;
+    color: #9ca3b0;
+    line-height: 1.8;
+  }
+  .desc-box strong { color: #c9d1d9; }
+
+  .diagram-container {
+    background: linear-gradient(135deg, rgba(15, 20, 35, 0.9), rgba(20, 25, 45, 0.95));
+    border: 1px solid rgba(88, 166, 255, 0.12);
+    border-radius: 16px;
+    padding: 40px 24px;
+    overflow-x: auto;
+  }
+
+  .arch-flow {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+  }
+
+  .arch-node {
+    background: rgba(30, 38, 55, 0.9);
+    border: 1px solid rgba(88, 166, 255, 0.2);
+    border-radius: 10px;
+    padding: 16px 28px;
+    text-align: center;
+    min-width: 260px;
+    position: relative;
+  }
+  .arch-node .node-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 600;
+    color: #58a6ff;
+  }
+  .arch-node .node-sub {
+    font-size: 11px;
+    color: #6b7280;
+    margin-top: 3px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .arrow-down {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 4px 0;
+    color: #4b5563;
+  }
+  .arrow-down .arrow-line {
+    width: 2px;
+    height: 20px;
+    background: linear-gradient(to bottom, rgba(88, 166, 255, 0.3), rgba(88, 166, 255, 0.15));
+  }
+  .arrow-down .arrow-label {
+    font-size: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    color: #6b7280;
+    margin: 4px 0;
+  }
+  .arrow-down .arrow-head {
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 6px solid rgba(88, 166, 255, 0.4);
+  }
+
+  .agent-block {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    width: 100%;
+    max-width: 850px;
+    justify-content: center;
+  }
+
+  .side-nodes {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 150px;
+  }
+
+  .side-node {
+    background: rgba(30, 38, 55, 0.8);
+    border: 1px solid rgba(167, 139, 250, 0.2);
+    border-radius: 8px;
+    padding: 10px 14px;
+    text-align: center;
+  }
+  .side-node .node-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    color: #a78bfa;
+  }
+  .side-node .node-sub {
+    font-size: 10px;
+    color: #6b7280;
+    margin-top: 2px;
+  }
+
+  .side-arrow {
+    color: #4b5563;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .agent-main {
+    background: linear-gradient(135deg, rgba(30, 38, 55, 0.95), rgba(25, 32, 50, 0.95));
+    border: 1.5px solid rgba(88, 166, 255, 0.25);
+    border-radius: 14px;
+    padding: 24px 28px;
+    flex: 1;
+    max-width: 480px;
+    box-shadow: 0 0 30px rgba(88, 166, 255, 0.06);
+  }
+  .agent-main .agent-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    font-weight: 700;
+    color: #58a6ff;
+    margin-bottom: 12px;
+  }
+  .agent-detail {
+    font-size: 11px;
+    color: #6b7280;
+    line-height: 1.8;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .agent-detail .label { color: #9ca3b0; }
+  .agent-detail .tool-item { padding-left: 14px; color: #34d399; }
+  .agent-detail .tool-item.planned { color: #fbbf24; }
+
+  .fanout-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 700px;
+  }
+  .fanout-branches {
+    display: flex;
+    gap: 24px;
+    justify-content: center;
+    width: 100%;
+    position: relative;
+  }
+  .fanout-branches::before {
+    content: '';
+    position: absolute;
+    top: -14px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 70%;
+    height: 1px;
+    background: rgba(88, 166, 255, 0.15);
+  }
+
+  .action-card {
+    flex: 1;
+    max-width: 200px;
+    border-radius: 10px;
+    padding: 18px 16px;
+    text-align: center;
+    position: relative;
+  }
+  .action-card::before {
+    content: '';
+    position: absolute;
+    top: -14px;
+    left: 50%;
+    width: 1px;
+    height: 14px;
+    background: rgba(88, 166, 255, 0.2);
+  }
+
+  .action-card.send { background: rgba(52, 211, 153, 0.06); border: 1px solid rgba(52, 211, 153, 0.2); }
+  .action-card.ship { background: rgba(251, 191, 36, 0.06); border: 1px solid rgba(251, 191, 36, 0.2); }
+  .action-card.ticket { background: rgba(167, 139, 250, 0.06); border: 1px solid rgba(167, 139, 250, 0.2); }
+
+  .action-marker {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+  }
+  .send .action-marker { color: #34d399; }
+  .ship .action-marker { color: #fbbf24; }
+  .ticket .action-marker { color: #a78bfa; }
+
+  .action-card .action-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: #e6edf3;
+    margin-bottom: 4px;
+  }
+  .action-card .action-detail {
+    font-size: 10px;
+    color: #6b7280;
+    font-family: 'JetBrains Mono', monospace;
+    line-height: 1.5;
+  }
+
+  .table-wrap {
+    overflow-x: auto;
+    border-radius: 12px;
+    border: 1px solid rgba(88, 166, 255, 0.1);
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  thead th {
+    background: rgba(88, 166, 255, 0.07);
+    color: #8b949e;
+    font-weight: 600;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 12px 16px;
+    text-align: left;
+    border-bottom: 1px solid rgba(88, 166, 255, 0.1);
+  }
+  tbody td {
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    vertical-align: top;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: rgba(88, 166, 255, 0.03); }
+
+  .mono {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: #58a6ff;
+  }
+  .status-built {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 600;
+    background: rgba(52, 211, 153, 0.1);
+    color: #34d399;
+    border: 1px solid rgba(52, 211, 153, 0.2);
+  }
+  .status-planned {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 600;
+    background: rgba(251, 191, 36, 0.1);
+    color: #fbbf24;
+    border: 1px solid rgba(251, 191, 36, 0.2);
+  }
+
+  .checklist-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+  .checklist-card {
+    border-radius: 12px;
+    padding: 24px;
+  }
+  .checklist-card.built {
+    background: rgba(52, 211, 153, 0.04);
+    border: 1px solid rgba(52, 211, 153, 0.12);
+  }
+  .checklist-card.planned {
+    background: rgba(251, 191, 36, 0.04);
+    border: 1px solid rgba(251, 191, 36, 0.12);
+  }
+  .checklist-card h3 {
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .checklist-card.built h3 { color: #34d399; }
+  .checklist-card.planned h3 { color: #fbbf24; }
+
+  .check-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 6px 0;
+    font-size: 13px;
+    color: #9ca3b0;
+  }
+  .check-icon {
+    flex-shrink: 0;
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    margin-top: 2px;
+  }
+  .built .check-icon { background: rgba(52, 211, 153, 0.15); color: #34d399; }
+  .planned .check-icon { background: rgba(251, 191, 36, 0.15); color: #fbbf24; }
+
+  .decisions-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .decision-card {
+    background: rgba(244, 114, 182, 0.04);
+    border: 1px solid rgba(244, 114, 182, 0.12);
+    border-radius: 12px;
+    padding: 20px;
+  }
+  .decision-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    color: #f472b6;
+    margin-bottom: 6px;
+  }
+  .decision-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #e6edf3;
+    margin-bottom: 8px;
+  }
+  .decision-desc {
+    font-size: 12px;
+    color: #6b7280;
+    line-height: 1.7;
+  }
+
+  .routing-note {
+    margin-top: 12px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    background: rgba(88, 166, 255, 0.04);
+    border-left: 3px solid rgba(88, 166, 255, 0.3);
+    font-size: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    color: #6b7280;
+  }
+
+  .marker-tag {
+    display: inline-block;
+    padding: 1px 8px;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .marker-send { background: rgba(52, 211, 153, 0.1); color: #34d399; }
+  .marker-ship { background: rgba(251, 191, 36, 0.1); color: #fbbf24; }
+  .marker-ticket { background: rgba(167, 139, 250, 0.1); color: #a78bfa; }
+  .marker-none { background: rgba(107, 114, 128, 0.15); color: #6b7280; }
+</style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <h1 id="title">Email Production Pipeline</h1>
+      <p id="subtitle" style="font-size: 15px; color: #6b7280; margin-bottom: 14px;">Architectural Overview</p>
+      <div class="status-badges">
+        <span class="badge badge-poc">⚡ PoC v5 — seeking architecture approval</span>
+        <span class="badge badge-stack">n8n · Vertex AI · Gmail · Jira · Adobe Campaign</span>
+        <span class="badge badge-gcp">GCP: tech-and-data-development</span>
+      </div>
+    </div>
+
+    <!-- What it does -->
+    <div class="section">
+      <div class="section-title">
+        <span class="icon" style="background: rgba(88, 166, 255, 0.1);">🎯</span>
+        <span>What It Does</span>
+      </div>
+      <div class="desc-box">
+        A <strong>conversational AI agent</strong> that takes <strong>Figma HTML exports</strong> or design screenshots and produces <strong>accessible, dark-mode-ready, email-client-compatible HTML</strong> — then routes the output to email proofing, Jira ticketing, or Adobe Campaign delivery.<br><br>
+        Users interact via a lightweight browser-based chat UI. <strong>No n8n knowledge required.</strong>
+      </div>
+    </div>
+
+    <!-- Architecture Diagram -->
+    <div class="section">
+      <div class="section-title">
+        <span class="icon" style="background: rgba(167, 139, 250, 0.1);">🏗️</span>
+        <span>Architecture</span>
+      </div>
+      <div class="diagram-container">
+        <div class="arch-flow">
+          <div class="arch-node">
+            <div class="node-title">Browser Chat UI</div>
+            <div class="node-sub">email-chat.html</div>
+          </div>
+
+          <div class="arrow-down">
+            <div class="arrow-line"></div>
+            <div class="arrow-label">HTTP POST (webhook)</div>
+            <div class="arrow-head"></div>
+          </div>
+
+          <div class="arch-node">
+            <div class="node-title">n8n Chat Trigger</div>
+            <div class="node-sub">webhook endpoint</div>
+          </div>
+
+          <div class="arrow-down">
+            <div class="arrow-line"></div>
+            <div class="arrow-head"></div>
+          </div>
+
+          <div class="agent-block">
+            <div class="side-nodes">
+              <div class="side-node">
+                <div class="node-title">Google Vertex</div>
+                <div class="node-sub">Gemini LLM</div>
+              </div>
+              <div class="side-node">
+                <div class="node-title">Conversation</div>
+                <div class="node-sub">Memory (8)</div>
+              </div>
+            </div>
+
+            <div class="side-arrow">◄──►</div>
+
+            <div class="agent-main">
+              <div class="agent-title">🤖 AI AGENT — Gemini 2.5 Flash</div>
+              <div class="agent-detail">
+                <span class="label">System prompt:</span> email best practices,<br>
+                POUR accessibility, dark mode, brand<br>
+                validation, delivery markers<br><br>
+                <span class="label">Tools:</span><br>
+                <div class="tool-item">├─ Run Accessibility Tests (code tool)</div>
+                <div class="tool-item planned">└─ Run Brand Guidelines Check (planned)</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="arrow-down">
+            <div class="arrow-line"></div>
+            <div class="arrow-label">Agent output with action markers</div>
+            <div class="arrow-head"></div>
+          </div>
+
+          <div class="arch-node">
+            <div class="node-title">Extract &amp; Route</div>
+            <div class="node-sub">Code node — regex</div>
+          </div>
+
+          <div class="arrow-down">
+            <div class="arrow-line" style="height: 12px;"></div>
+          </div>
+
+          <div class="fanout-container">
+            <div class="fanout-branches">
+              <div class="action-card send">
+                <div class="action-marker">:::SEND:::</div>
+                <div class="action-name">Send Email</div>
+                <div class="action-detail">Gmail SMTP/465<br>vml.map.td.poc<br>@gmail.com</div>
+              </div>
+              <div class="action-card ship">
+                <div class="action-marker">:::SHIP:::</div>
+                <div class="action-name">Push to Adobe Campaign</div>
+                <div class="action-detail">HTTP/SOAP<br>ACC endpoint<br>TBD</div>
+              </div>
+              <div class="action-card ticket">
+                <div class="action-marker">:::TICKET:::</div>
+                <div class="action-name">Create Jira Ticket</div>
+                <div class="action-detail">Jira Cloud v3<br>TAD project<br>Basic Auth</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Agent Tools -->
+    <div class="section">
+      <div class="section-title">
+        <span class="icon" style="background: rgba(52, 211, 153, 0.1);">🔧</span>
+        <span>Agent Tools (sub-nodes)</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Tool</th>
+              <th>Status</th>
+              <th>What It Does</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="font-weight: 600; color: #e6edf3;">Run Accessibility Tests</td>
+              <td><span class="status-built">Built</span></td>
+              <td>Validates POUR compliance: lang attr, heading hierarchy, alt text, dark mode CSS, Outlook selectors, font sizes, link text, DOCTYPE, charset, viewport, 600px width</td>
+            </tr>
+            <tr>
+              <td style="font-weight: 600; color: #e6edf3;">Run Brand Guidelines Check</td>
+              <td><span class="status-planned">Planned</span></td>
+              <td>Validates HTML against uploaded/configured brand rules: color palette (hex match), font stacks, spacing, logo placement, tone. Returns pass/fail report identical in format to accessibility tests. Runs in parallel with accessibility check before delivery.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p id="tools-note" style="font-size: 12px; color: #6b7280; margin-top: 10px; padding-left: 4px;">Both tools are <strong style="color: #9ca3b0;">code-based</strong> (JavaScript running inside n8n). The agent invokes them via natural language — no user action needed.</p>
+    </div>
+
+    <!-- Delivery Actions -->
+    <div class="section">
+      <div class="section-title">
+        <span class="icon" style="background: rgba(244, 114, 182, 0.1);">📤</span>
+        <span>Delivery Actions</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>User Says</th>
+              <th>Marker</th>
+              <th>Downstream Node</th>
+              <th>Integration</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="mono">"send to niclas.ulfeldt@vml.com"</span> / <span class="mono">"proof it"</span></td>
+              <td><span class="marker-tag marker-send">:::SEND_START:::</span></td>
+              <td style="font-weight: 600; color: #e6edf3;">Send Email</td>
+              <td>Gmail SMTP (port 465, SSL). Sends rendered HTML as email body.</td>
+            </tr>
+            <tr>
+              <td><span class="mono">"ship it"</span></td>
+              <td><span class="marker-tag marker-ship">:::SHIP_START:::</span></td>
+              <td style="font-weight: 600; color: #e6edf3;">Push to Adobe Campaign</td>
+              <td>HTTP POST (SOAP/XML). ACC endpoint TBD — placeholder in place.</td>
+            </tr>
+            <tr>
+              <td><span class="mono">"create ticket"</span> / <span class="mono">"log it"</span></td>
+              <td><span class="marker-tag marker-ticket">:::TICKET_START:::</span></td>
+              <td style="font-weight: 600; color: #e6edf3;">Create Jira Ticket</td>
+              <td>REST POST to <span class="mono" style="font-size:11px;">wundertracker.atlassian.net</span>. Project TAD, type Task. Supports optional epic via parent.key.</td>
+            </tr>
+            <tr>
+              <td style="color: #6b7280;">(anything else)</td>
+              <td><span class="marker-tag marker-none">No marker</span></td>
+              <td style="color: #6b7280;">Chat Only</td>
+              <td style="color: #6b7280;">Passes through — normal conversation.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="routing-note">
+        Routing is sequential IF-chain: Is Send? → Is Ship? → Is Ticket? → Chat Only
+      </div>
+    </div>
+
+    <!-- Infrastructure -->
+    <div class="section">
+      <div class="section-title">
+        <span class="icon" style="background: rgba(88, 166, 255, 0.1);">⚙️</span>
+        <span>Infrastructure</span>
+      </div>
+
+      <p style="font-size: 14px; font-weight: 600; color: #58a6ff; margin-bottom: 12px;">Current: Local Docker (PoC)</p>
+      <div class="table-wrap" style="margin-bottom: 28px;">
+        <table>
+          <thead>
+            <tr>
+              <th>Component</th>
+              <th>Detail</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="font-weight: 600; color: #e6edf3;">Runtime</td>
+              <td>n8n v2.10.4, Docker container, <span class="mono">localhost:5678</span></td>
+            </tr>
+            <tr>
+              <td style="font-weight: 600; color: #e6edf3;">LLM</td>
+              <td>Google Vertex AI, Gemini 2.5 Flash, temp 0.2</td>
+            </tr>
+            <tr>
+              <td style="font-weight: 600; color: #e6edf3;">Persistence</td>
+              <td>Docker named volume (<span class="mono">n8n_n8n_data</span>) — SQLite DB inside. NOT bind-mounted (OneDrive + SQLite = corruption risk).</td>
+            </tr>
+            <tr>
+              <td style="font-weight: 600; color: #e6edf3;">Memory</td>
+              <td>Buffer window of 8 messages per session. Keeps token budget manageable — large HTML in memory caused iteration loops at higher values.</td>
+            </tr>
+            <tr>
+              <td style="font-weight: 600; color: #e6edf3;">Max iterations</td>
+              <td>20 (up from default 10). Needed because email HTML generation + tool calls consume multiple iterations.</td>
+            </tr>
+            <tr>
+              <td style="font-weight: 600; color: #e6edf3;">Session isolation</td>
+              <td>Each browser page load generates a UUID session. Memory key: <span class="mono">email-v5</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p style="font-size: 14px; font-weight: 600; color: #34d399; margin-bottom: 12px;">Target: Cloud Run (production)</p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Component</th>
+              <th>Detail</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="font-weight: 600; color: #e6edf3;">Compute</td>
+              <td>Cloud Run service in <span class="mono">tech-and-data-development</span> project. n8n official Docker image.</td>
+            </tr>
+            <tr>
+              <td style="font-weight: 600; color: #e6edf3;">Database</td>
+              <td>Cloud SQL (PostgreSQL). n8n requires a persistent DB for workflows, encrypted credentials, execution logs, and conversation memory. Cloud Run containers are ephemeral — without an external DB, all state is lost on every scale-to-zero or redeploy. Config: <span class="mono">DB_TYPE=postgresdb</span> + connection env vars.</td>
+            </tr>
+            <tr>
+              <td style="font-weight: 600; color: #e6edf3;">Chat UI</td>
+              <td>Bundled into the same Cloud Run container as n8n. Webhook URL points to the Cloud Run service URL.</td>
+            </tr>
+            <tr>
+              <td style="font-weight: 600; color: #e6edf3;">Auth</td>
+              <td>GCP IAM on the Cloud Run service (<span class="mono">roles/run.invoker</span>). Users authenticate via their GCP identity — no separate login.</td>
+            </tr>
+            <tr>
+              <td style="font-weight: 600; color: #e6edf3;">HTTPS</td>
+              <td>Provided by Cloud Run automatically via <span class="mono">*.run.app</span> domain.</td>
+            </tr>
+            <tr>
+              <td style="font-weight: 600; color: #e6edf3;">Secrets</td>
+              <td><span class="mono">N8N_ENCRYPTION_KEY</span> stored in Secret Manager — must be stable across deploys or n8n credentials become unreadable. DB connection string also in Secret Manager.</td>
+            </tr>
+            <tr>
+              <td style="font-weight: 600; color: #e6edf3;">Scaling</td>
+              <td>Min instances: 1 (avoid cold starts during working hours). Max instances: configurable.</td>
+            </tr>
+            <tr>
+              <td style="font-weight: 600; color: #e6edf3;">Networking</td>
+              <td>Cloud SQL via private VPC connector. Outbound to: Google Vertex AI, Gmail SMTP, Jira Cloud, Adobe Campaign.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="routing-note" style="margin-top: 12px;">
+        <strong style="color: #9ca3b0;">Migration path:</strong> Export workflow JSON + re-import on Cloud Run instance. Re-enter credentials (encrypted to the new <span class="mono">N8N_ENCRYPTION_KEY</span>). No code changes to the workflow itself.
+      </div>
+    </div>
+
+    <!-- Security -->
+    <div class="section">
+      <div class="section-title">
+        <span class="icon" style="background: rgba(251, 191, 36, 0.1);">🔐</span>
+        <span>Security &amp; Credentials</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Credential</th>
+              <th>Storage</th>
+              <th>Scope</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="font-weight: 600; color: #e6edf3;">Google Vertex SA key</td>
+              <td>n8n credential store (encrypted in Docker volume)</td>
+              <td><span class="mono" style="font-size:11px;">figma-to-martech-poc@tech-and-data-development.iam.gserviceaccount.com</span></td>
+            </tr>
+            <tr>
+              <td style="font-weight: 600; color: #e6edf3;">Gmail SMTP (App Password)</td>
+              <td>n8n credential store</td>
+              <td><span class="mono">vml.map.td.poc@gmail.com</span> — PoC-only shared mailbox</td>
+            </tr>
+            <tr>
+              <td style="font-weight: 600; color: #e6edf3;">Jira API token</td>
+              <td>n8n credential store (HTTP Basic Auth)</td>
+              <td>Personal Atlassian token — each developer generates their own</td>
+            </tr>
+            <tr>
+              <td style="font-weight: 600; color: #e6edf3;">Adobe Campaign auth</td>
+              <td style="color: #fbbf24;">Not yet configured</td>
+              <td>Placeholder node — needs ACC URL + credentials</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="routing-note" style="border-left-color: rgba(251, 191, 36, 0.3);">
+        <span class="mono">commands.txt</span> (local-only, gitignored) contains reference credentials for developer onboarding.
+      </div>
+    </div>
+
+    <!-- What's Built vs Planned -->
+    <div class="section">
+      <div class="section-title">
+        <span class="icon" style="background: rgba(52, 211, 153, 0.1);">📋</span>
+        <span>What's Built vs. What's Planned</span>
+      </div>
+      <div class="checklist-grid">
+        <div class="checklist-card built">
+          <h3 id="built-heading">✅ Built (v5 — current)</h3>
+          <div class="check-item"><span class="check-icon">✓</span> Conversational agent with Gemini 2.5 Flash</div>
+          <div class="check-item"><span class="check-icon">✓</span> Figma HTML cleanup + design image analysis</div>
+          <div class="check-item"><span class="check-icon">✓</span> POUR accessibility enforcement + automated test tool</div>
+          <div class="check-item"><span class="check-icon">✓</span> Dark mode with Outlook compatibility</div>
+          <div class="check-item"><span class="check-icon">✓</span> Email send/proof via Gmail SMTP</div>
+          <div class="check-item"><span class="check-icon">✓</span> Jira ticket creation via REST API (with optional epic)</div>
+          <div class="check-item"><span class="check-icon">✓</span> Adobe Campaign push node (placeholder)</div>
+          <div class="check-item"><span class="check-icon">✓</span> Custom chat UI (email-chat.html)</div>
+          <div class="check-item"><span class="check-icon">✓</span> Docker deployment with persistent volume</div>
+          <div class="check-item"><span class="check-icon">✓</span> Git repo with CI-safe .gitignore</div>
+        </div>
+        <div class="checklist-card planned">
+          <h3 id="planned-heading">🔮 Planned (post-deploy iterations)</h3>
+          <div class="check-item"><span class="check-icon">○</span> <strong style="color:#c9d1d9;">Brand Guidelines Check tool</strong> — code tool that validates against configurable brand rules. Straightforward addition — deploy first, add later.</div>
+          <div class="check-item"><span class="check-icon">○</span> <strong style="color:#c9d1d9;">Adobe Campaign endpoint</strong> — credentials exist but not on hand. Will configure and redeploy once available. Pipeline node already in place.</div>
+          <div class="check-item"><span class="check-icon">○</span> <strong style="color:#c9d1d9;">Jira service account</strong> — currently using Niclas's personal API token. Sufficient for manager testing/approval. Will switch to a dedicated service account before wider rollout.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Decided -->
+    <div class="section">
+      <div class="section-title">
+        <span class="icon" style="background: rgba(52, 211, 153, 0.1);">✅</span>
+        <span>Decided</span>
+      </div>
+      <div class="decisions-grid">
+        <div class="decision-card" style="background: rgba(52, 211, 153, 0.04); border-color: rgba(52, 211, 153, 0.12);">
+          <div class="decision-num" style="color: #34d399;">DECIDED</div>
+          <div class="decision-title">Chat UI Hosting</div>
+          <div class="decision-desc">Bundled into the same Cloud Run container as n8n. Default <span class="mono">*.run.app</span> domain.</div>
+        </div>
+        <div class="decision-card" style="background: rgba(52, 211, 153, 0.04); border-color: rgba(52, 211, 153, 0.12);">
+          <div class="decision-num" style="color: #34d399;">DECIDED</div>
+          <div class="decision-title">Jira Auth (PoC)</div>
+          <div class="decision-desc">Niclas's personal API token. Manager tests and approves in Niclas's name.</div>
+        </div>
+        <div class="decision-card" style="background: rgba(52, 211, 153, 0.04); border-color: rgba(52, 211, 153, 0.12);">
+          <div class="decision-num" style="color: #34d399;">DECIDED</div>
+          <div class="decision-title">ACC Credentials</div>
+          <div class="decision-desc">Available but not on hand. Will add and redeploy — pipeline node already wired.</div>
+        </div>
+        <div class="decision-card" style="background: rgba(52, 211, 153, 0.04); border-color: rgba(52, 211, 153, 0.12);">
+          <div class="decision-num" style="color: #34d399;">DECIDED</div>
+          <div class="decision-title">Brand Guidelines Check</div>
+          <div class="decision-desc">Not blocking deployment. Will add as a post-deploy iteration.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Open Decisions -->
+    <div class="section">
+      <div class="section-title">
+        <span class="icon" style="background: rgba(244, 114, 182, 0.1);">❓</span>
+        <span>Open Decisions</span>
+      </div>
+      <div class="decisions-grid">
+        <div class="decision-card">
+          <div class="decision-num">DECISION 01</div>
+          <div class="decision-title">Brand Guidelines Format</div>
+          <div class="decision-desc">How should brand rules be provided? Options: JSON config file uploaded to n8n, pasted into chat per-session, or stored in a shared doc the agent reads.</div>
+        </div>
+        <div class="decision-card">
+          <div class="decision-num">DECISION 02</div>
+          <div class="decision-title">Model Upgrade</div>
+          <div class="decision-desc">Gemini 2.5 Flash is fast and cheap. When n8n adds support for newer models (e.g. Gemini 3.x), we can swap with a one-field change.</div>
+        </div>
+        <div class="decision-card" style="grid-column: span 2;">
+          <div class="decision-num">DECISION 03</div>
+          <div class="decision-title">Jira Guidelines</div>
+          <div class="decision-desc">Where is the agent allowed to create tickets? In a specific epic? In a specific Jira project? What content should be included in the created tickets?</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</body></html>
