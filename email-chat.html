@@ -232,6 +232,17 @@
     #messages::-webkit-scrollbar { width: 6px; }
     #messages::-webkit-scrollbar-track { background: transparent; }
     #messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    /* ── Collapsible HTML code blocks ── */
+    .code-toggle { margin: 8px 0; }
+    .code-toggle summary {
+      cursor: pointer;
+      color: var(--text-muted);
+      font-size: 13px;
+      padding: 6px 0;
+      user-select: none;
+    }
+    .code-toggle summary:hover { color: var(--text); }
   </style>
 </head>
 <body>
@@ -441,7 +452,13 @@
       const div = document.createElement('div');
       div.className = 'msg bot';
       let html = escapeHtml(text);
-      html = html.replace(/```(\w*)\n([\s\S]*?)```/g, '<pre><code>$2</code></pre>');
+      // Hide HTML code blocks behind a collapsible toggle
+      html = html.replace(/```(\w*)\n([\s\S]*?)```/g, (_, lang, code) => {
+        if (code.trim().match(/^&lt;!DOCTYPE|^&lt;html|^&lt;table|^&lt;div|^&lt;head/i)) {
+          return '<details class="code-toggle"><summary>View HTML code</summary><pre><code>' + code + '</code></pre></details>';
+        }
+        return '<pre><code>' + code + '</code></pre>';
+      });
       html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
       html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
       div.innerHTML = html;
