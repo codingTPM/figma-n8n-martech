@@ -389,6 +389,8 @@
       showTyping();
 
       try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 120000);
         let res;
         if (currentImages.length > 0) {
           const form = new FormData();
@@ -398,20 +400,34 @@
           currentImages.forEach((img, i) =>
             form.append('files', img.file, img.file.name || 'image-' + i + '.png')
           );
-          res = await fetch(WEBHOOK_URL, { method: 'POST', body: form });
+          res = await fetch(WEBHOOK_URL, { method: 'POST', body: form, signal: controller.signal });
         } else {
           res = await fetch(WEBHOOK_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ sessionId, action: 'sendMessage', chatInput: currentText }),
+            signal: controller.signal,
           });
         }
+        clearTimeout(timeout);
         const data = await res.json();
         hideTyping();
-        addBotMessage(data.output || data.text || JSON.stringify(data));
+        let reply = data.output || data.message || data.text;
+        if (!reply) {
+          if (data.accepted && Array.isArray(data.accepted)) {
+            reply = `Email sent to ${data.accepted.join(', ')}`;
+          } else {
+            reply = JSON.stringify(data);
+          }
+        }
+        addBotMessage(reply);
       } catch (err) {
         hideTyping();
-        addBotMessage('Connection error \u2014 is the n8n workflow active?');
+        if (err.name === 'AbortError') {
+          addBotMessage('The agent took too long to respond (2 min timeout). Try a simpler request or check the n8n execution log.');
+        } else {
+          addBotMessage('Connection error — is the n8n workflow active?');
+        }
       }
       busy = false;
       updateSendBtn();
