@@ -2,11 +2,14 @@
   "name": "Email Production Pipeline v6",
   "nodes": [
     {
-      "parameters": {},
+      "parameters": {
+        "authentication": "none"
+      },
       "id": "e1a1a1a1-0001-0001-0001-000000000001",
       "name": "When chat message received",
       "type": "@n8n/n8n-nodes-langchain.chatTrigger",
       "typeVersion": 1.4,
+      "webhookId": "2b1d314a-b915-4295-8194-c53b8f339a1f",
       "position": [
         400,
         400
@@ -302,6 +305,35 @@
         2150,
         520
       ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1",
+              "name": "status",
+              "value": "chat_response",
+              "type": "string"
+            },
+            {
+              "id": "2",
+              "name": "message",
+              "value": "={{ 'Created Jira ticket ' + ($json.body ? $json.body.key : ($json.key || '')) + ': ' + $('Extract & Route').item.json.summary }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e1a1a1a1-0001-0001-0001-000000000032",
+      "name": "Ticket Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2400,
+        520
+      ]
     }
   ],
   "connections": {
@@ -420,6 +452,17 @@
           {
             "node": "Email Pipeline Agent",
             "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Jira Ticket": {
+      "main": [
+        [
+          {
+            "node": "Ticket Response",
+            "type": "main",
             "index": 0
           }
         ]

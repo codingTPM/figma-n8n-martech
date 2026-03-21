@@ -256,7 +256,7 @@
     // ╔═══════════════════════════════════════════════════════════╗
     // ║  SETUP: Replace the URL below with your webhook URL.     ║
     // ╚═══════════════════════════════════════════════════════════╝
-    const WEBHOOK_URL = 'http://localhost:5678/webhook/186181dc-dd3f-4b17-97eb-1dc2c494f2c7/chat';
+    const WEBHOOK_URL = 'http://localhost:5678/webhook/2b1d314a-b915-4295-8194-c53b8f339a1f/chat';
 
     const messages  = document.getElementById('messages');
     const input     = document.getElementById('msg-input');
@@ -416,6 +416,10 @@
         if (!reply) {
           if (data.accepted && Array.isArray(data.accepted)) {
             reply = `Email sent to ${data.accepted.join(', ')}`;
+          } else if (data.body && data.body.key && data.statusCode === 201) {
+            reply = `Created Jira ticket ${data.body.key}`;
+          } else if (data.statusCode && data.statusMessage) {
+            reply = `Action completed (${data.statusCode} ${data.statusMessage})`;
           } else {
             reply = JSON.stringify(data);
           }
