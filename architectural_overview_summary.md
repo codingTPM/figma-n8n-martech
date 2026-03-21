@@ -1,6 +1,6 @@
 # Email Production Pipeline — Architectural Overview
 
-**Status:** PoC (v5) — seeking architecture approval before production hardening
+**Status:** PoC (v6) — seeking architecture approval before production hardening
 **Stack:** n8n (self-hosted Docker) + Google Vertex AI (Gemini 2.5 Flash) + Gmail SMTP + Jira Cloud API + Adobe Campaign
 **GCP Project:** tech-and-data-development
 
@@ -8,7 +8,7 @@
 
 ## What it does
 
-A conversational AI agent that takes Figma HTML exports or design screenshots and produces accessible, dark-mode-ready, email-client-compatible HTML — then routes the output to email proofing, Jira ticketing, or Adobe Campaign delivery.
+A conversational AI agent that takes Figma HTML exports or design screenshots and produces accessible, dark-mode-ready, brand-validated, email-client-compatible HTML. It validates output against brand guidelines, creates Jira tickets for campaign tracking, sends email proofs, and pushes final deliveries into MarTech platforms (Adobe Campaign).
 
 Users interact via a lightweight browser-based chat UI. No n8n knowledge required.
 
@@ -37,8 +37,8 @@ Users interact via a lightweight browser-based chat UI. No n8n knowledge require
 ┌──────────────┐    │  validation, delivery markers               │
 │ Conversation │◄──►│                                             │
 │ Memory (8)   │    │  Tools:                                     │
-└──────────────┘    │   ├─ Run Accessibility Tests (code tool)    │
-                    │   └─ Run Brand Guidelines Check (planned)   │
+└──────────────┘    │   └─ Run Accessibility Tests (code tool)    │
+                    │  Brand validation: via CSS in system prompt  │
                     └───────────────────┬─────────────────────────┘
                                         │ Agent output with
                                         │ action markers
@@ -70,9 +70,9 @@ Users interact via a lightweight browser-based chat UI. No n8n knowledge require
 | Tool | Status | What it does |
 |------|--------|-------------|
 | **Run Accessibility Tests** | Built | Validates POUR compliance: lang attr, heading hierarchy, alt text, dark mode CSS, Outlook selectors, font sizes, link text, DOCTYPE, charset, viewport, 600px width |
-| **Run Brand Guidelines Check** | Planned | Validates HTML against uploaded/configured brand rules: color palette (hex match), font stacks, spacing, logo placement, tone. Returns pass/fail report identical in format to accessibility tests. Runs in parallel with accessibility check before delivery. |
+| **Brand Guidelines Validation** | Built | Prompt-based — the full `brand_guidelines.css` is embedded in the agent's system prompt. The agent validates HTML inline against the CSS values (color palette, type scale, spacing grid, border-radius, email width) and comment blocks (Tone of Voice, Do's/Don'ts). Swap the CSS block in the system prompt to change brands — pipeline logic stays identical. No separate tool node. |
 
-Both tools are **code-based** (JavaScript running inside n8n). The agent invokes them via natural language — no user action needed.
+`Run Accessibility Tests` is a **code-based** tool (JavaScript running inside n8n), invoked by the agent via natural language. Brand validation is **prompt-based** — the agent validates directly against CSS embedded in its system prompt. No user action needed for either.
 
 ---
 
@@ -97,25 +97,25 @@ Routing is sequential IF-chain: Is Send? → Is Ship? → Is Ticket? → Chat On
 |-----------|--------|
 | **Runtime** | n8n v2.10.4, Docker container, `localhost:5678` |
 | **LLM** | Google Vertex AI, Gemini 2.5 Flash, temp 0.2 |
-| **Persistence** | Docker named volume (`n8n_n8n_data`) — SQLite DB inside. NOT bind-mounted (OneDrive + SQLite = corruption risk). |
+| **Persistence** | SQLite DB inside Docker volume. On VM: persistent disk. |
 | **Memory** | Buffer window of 8 messages per session. Keeps token budget manageable — large HTML in memory caused iteration loops at higher values. |
 | **Max iterations** | 20 (up from default 10). Needed because email HTML generation + tool calls consume multiple iterations. |
-| **Session isolation** | Each browser page load generates a UUID session. Memory key: `email-v5`. |
+| **Session isolation** | Each browser page load generates a UUID session. Memory key: `email-v6`. |
 
-### Target: Cloud Run (production)
+### Target: GCE VM (production)
 
 | Component | Detail |
 |-----------|--------|
-| **Compute** | Cloud Run service in `tech-and-data-development` project. n8n official Docker image. |
-| **Database** | Cloud SQL (PostgreSQL). n8n requires a persistent DB for workflows, encrypted credentials, execution logs, and conversation memory. Cloud Run containers are ephemeral — without an external DB, all state is lost on every scale-to-zero or redeploy. Config: `DB_TYPE=postgresdb` + connection env vars. |
-| **Chat UI** | Hosted on the same Cloud Run service. n8n can serve static files, or email-chat.html is bundled into the container. Webhook URL points to the Cloud Run service URL. |
-| **Auth** | GCP IAM on the Cloud Run service (`roles/run.invoker`). Users authenticate via their GCP identity — no separate login. |
-| **HTTPS** | Provided by Cloud Run automatically via `*.run.app` domain. Custom domain optional. |
-| **Secrets** | `N8N_ENCRYPTION_KEY` stored in Secret Manager — must be stable across deploys or n8n credentials become unreadable. DB connection string also in Secret Manager. |
-| **Scaling** | Min instances: 1 (avoid cold starts during working hours). Max instances: configurable. |
-| **Networking** | Cloud SQL via private VPC connector. Outbound to: Google Vertex AI, Gmail SMTP, Jira Cloud, Adobe Campaign. |
+| **Compute** | GCE e2-micro VM (~$5-7/month) in `europe-north1`, project `tech-and-data-development`. n8n official Docker image via Docker Compose. |
+| **Database** | SQLite on the VM's persistent disk. |
+| **Chat UI** | `email-chat.html` hosted on Cloud Storage (static site). Webhook URL points to the VM's public IP. Password-gated for manager access. |
+| **Auth** | Password gate on the chat UI. n8n admin UI only accessible to developers logged into GCP (via SSH tunnel or IP allowlist — not exposed to the internet). |
+| **HTTPS** | Via reverse proxy (e.g. Caddy) or Cloud Load Balancer with managed SSL cert. |
+| **Secrets** | `N8N_ENCRYPTION_KEY` set as environment variable on the VM. Must be stable across restarts. |
+| **Scaling** | Single instance — sufficient for PoC/demo. |
+| **Networking** | Outbound to: Google Vertex AI, Gmail SMTP, Jira Cloud, Adobe Campaign. Inbound: webhook port for chat UI. |
 
-**Migration path:** Export workflow JSON + re-import on Cloud Run instance. Re-enter credentials (encrypted to the new `N8N_ENCRYPTION_KEY`). No code changes to the workflow itself.
+**Migration path:** Export workflow JSON + re-import on VM instance. Re-enter credentials (encrypted to the new `N8N_ENCRYPTION_KEY`). No code changes to the workflow itself.
 
 ---
 
@@ -126,7 +126,7 @@ Routing is sequential IF-chain: Is Send? → Is Ship? → Is Ticket? → Chat On
 | Google Vertex SA key | n8n credential store (encrypted in Docker volume) | GCP service account: `figma-to-martech-poc@tech-and-data-development.iam.gserviceaccount.com` |
 | Gmail SMTP (App Password) | n8n credential store | `vml.map.td.poc@gmail.com` — PoC-only shared mailbox |
 | Jira API token | n8n credential store (HTTP Basic Auth) | Personal Atlassian token — each developer generates their own |
-| Adobe Campaign auth | Not yet configured | Placeholder node — needs ACC URL + credentials |
+| Adobe Campaign auth | Not yet configured | Adam owns this. To be added by him. TBD whether we use a developer's personal operator or a service account operator. |
 
 `commands.txt` (local-only, gitignored) contains reference credentials for developer onboarding.
 
@@ -134,7 +134,7 @@ Routing is sequential IF-chain: Is Send? → Is Ship? → Is Ticket? → Chat On
 
 ## What's built vs. what's planned
 
-### Built (v5 — current)
+### Built (v6 — current)
 - [x] Conversational agent with Gemini 2.5 Flash
 - [x] Figma HTML cleanup + design image analysis
 - [x] POUR accessibility enforcement + automated test tool
@@ -145,23 +145,24 @@ Routing is sequential IF-chain: Is Send? → Is Ship? → Is Ticket? → Chat On
 - [x] Custom chat UI (email-chat.html)
 - [x] Docker deployment with persistent volume
 - [x] Git repo with CI-safe .gitignore
+- [x] Brand guidelines CSS (`brand_guidelines.css`) with Tone of Voice, Do's/Don'ts, 8px baseline grid
+- [x] Brand validation via CSS embedded in system prompt (swap CSS block to change brands)
 
 ### Planned (post-deploy iterations)
-- [ ] **Brand Guidelines Check tool** — code tool that validates against configurable brand rules (colors, fonts, spacing, logo). Straightforward addition — deploy first, add in a later iteration.
-- [ ] **Adobe Campaign endpoint** — credentials exist but not on hand. Will configure and redeploy once available. Pipeline node is already in place.
+- [ ] **Adobe Campaign endpoint** — Adam owns this. To be added by him. TBD whether we use a developer's personal operator or a service account operator. Pipeline node already in place.
 - [ ] **Jira service account** — currently using Niclas's personal API token. Sufficient for manager testing/approval. Will switch to a dedicated service account token before wider rollout.
 
 ---
 
 ## Decided
 
-- **Chat UI hosting** — Bundled into the same Cloud Run container as n8n. Default `*.run.app` domain.
+- **Chat UI hosting** — Static HTML on Cloud Storage (password-gated). Webhook URL points to GCE VM.
+- **Deployment target** — GCE e2-micro VM (~$5-7/month) in europe-north1.
 - **Jira auth (PoC)** — Niclas's personal API token. Manager tests and approves in Niclas's name.
-- **ACC credentials** — Available but not on hand. Will add and redeploy — pipeline node already wired.
-- **Brand Guidelines Check** — Not blocking deployment. Will add as a post-deploy iteration.
+- **ACC credentials** — Adam owns this. To be added by him. TBD whether we use a developer's personal operator or a service account operator. Pipeline node already wired.
+- **Brand guidelines format** — CSS file (`brand_guidelines.css`). CSS values define the visual rules (colors, type scale, spacing grid). Comment blocks at the top carry Tone of Voice and Do's/Don'ts in plain English. The full CSS is embedded in the agent's system prompt. Swap the CSS block to switch brands — pipeline logic stays identical. Intentionally no component patterns: this tool serves custom one-off campaigns where standard component libraries don't fit (the core use case).
+- **Brand Guidelines Validation** — Built. Prompt-based — agent validates inline against CSS in its system prompt. No separate code tool needed. Change the CSS → change the checks.
 
 ## Open decisions
-
-1. **Brand guidelines format** — How should brand rules be provided? Options: JSON config file uploaded to n8n, pasted into chat per-session, or stored in a shared doc the agent reads.
-2. **Model upgrade** — Gemini 2.5 Flash is fast and cheap. When n8n adds support for newer models (e.g. Gemini 3.x), we can swap with a one-field change.
-3. **Jira guidelines** — Where is the agent allowed to create tickets (in specific epic? in a specific jira project?) What content should be in the created tickets.
+1. **Model upgrade** — Gemini 2.5 Flash is fast and cheap. When n8n adds support for newer models (e.g. Gemini 3.x), we can swap with a one-field change.
+2. **Jira guidelines** — Where is the agent allowed to create tickets (in specific epic? in a specific jira project?) What content should be in the created tickets.

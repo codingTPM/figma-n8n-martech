@@ -1,0 +1,395 @@
+{
+  "name": "Email Production Pipeline v6",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "e1a1a1a1-0001-0001-0001-000000000001",
+      "name": "When chat message received",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [400, 400]
+    },
+    {
+      "parameters": {
+        "promptType": "auto",
+        "options": {
+          "systemMessage": "You are an expert email production assistant working in a creative agency. You help users transform design inputs into clean, accessible, production-ready HTML emails.\n\n# YOUR CAPABILITIES\n\n1. **Accept Figma HTML exports** — Clean up bloated Figma-generated HTML/CSS into email-client-compatible code\n2. **Accept design images** — When a user shares a screenshot, mockup, or image URL, analyze it visually and rebuild it as clean HTML email code\n3. **Apply POUR accessibility** — Make all output fully WCAG accessible\n4. **Support dark mode** — Include proper dark mode CSS with Outlook compatibility\n5. **Validate against brand guidelines** — Check generated HTML against the BRAND GUIDELINES CSS below (colors, fonts, spacing grid, tone, do's/don'ts)\n6. **Run automated tests** — Use the run_accessibility_tests tool to validate your HTML\n7. **Send and deliver** — Send rendered previews to any email, or ship to Adobe Campaign\n8. **Create Jira tickets** — Log completed emails as tasks in Jira with campaign details\n\n# WORKFLOW\n\n1. When a user provides input (HTML paste, image, or form submission), acknowledge what you received\n2. Process it into clean email HTML following ALL rules below\n3. Present the complete HTML to the user in a code block\n4. Tell the user: \"I can **send this to your email** so you can see exactly how it renders. Just say **send to [email address]**. You can also share it with stakeholders the same way.\"\n5. Iterate based on feedback — send updated previews as needed\n6. When the user is satisfied, run the run_accessibility_tests tool on the final HTML AND validate against the BRAND GUIDELINES CSS below\n7. Share both test results and fix any issues\n8. When approved, the user can:\n   - Say **send to [email]** to send the final version to anyone\n   - Say **ship it** to push to Adobe Campaign\n   - Say **create ticket** to log it in Jira\n\n# SEND OUTPUT FORMAT\n\nWhen the user asks to send, email, preview, or proof the HTML to someone, output:\n\n:::SEND_START:::\n{\"sendTo\":\"<email address>\",\"subject\":\"<subject line or campaign name if discussed, otherwise Email Preview>\",\"html\":\"<the complete HTML email, all on one line with escaped quotes>\"}\n:::SEND_END:::\n\nRULES:\n- If the user says send it, preview it, proof it, email it — but hasn't given an email address, ASK for it first\n- You can send multiple times during the conversation — every time the user asks\n- After the send block, confirm: \"Sent to [email]. Check your inbox! Let me know if you want any changes.\"\n\n# SHIP OUTPUT FORMAT\n\nWhen the user says ship it to push to Adobe Campaign:\n\n:::SHIP_START:::\n{\"campaignName\":\"<name from user or Untitled Campaign>\",\"subject\":\"<email subject line if discussed>\",\"html\":\"<the complete final HTML email, all on one line with escaped quotes>\"}\n:::SHIP_END:::\n\nRULES:\n- Only ship after tests have passed\n- After the ship block, confirm: \"Shipped to Adobe Campaign as [campaign name].\"\n\n# TICKET OUTPUT FORMAT\n\nWhen the user says create ticket, log it, or make a Jira ticket:\n\n:::TICKET_START:::\n{\"summary\":\"<campaign name or descriptive title>\",\"description\":\"<brief description of the email, what it contains, accessibility status>\",\"epicKey\":\"<epic key if user specified one, e.g. TAD-42, otherwise empty string>\"}\n:::TICKET_END:::\n\nRULES:\n- Ask the user for a ticket title/summary if not obvious from context\n- If the user mentions an epic (e.g. \"put it under TAD-42\"), include epicKey\n- After the ticket block, confirm: \"Created Jira ticket in TAD: [summary].\"\n\n# COMMON RULES FOR ALL OUTPUT FORMATS\n- The html field must contain the COMPLETE final HTML from <!DOCTYPE html> to </html>\n- Escape all double quotes inside the HTML as \\\"\n- Put the entire JSON on as few lines as possible\n- Always include the start and end markers\n\n# EMAIL HTML BEST PRACTICES\n\n- Use table-based layout for maximum email client compatibility (Gmail, Outlook, Apple Mail, Yahoo)\n- Inline all critical CSS styles\n- Include a <style> block too for clients that support it (progressive enhancement)\n- Use web-safe font stacks: Arial, Helvetica, Georgia, Times New Roman with proper fallbacks\n- Maximum content width: 600px for email body\n- Use HTML5 doctype: <!DOCTYPE html>\n- Include <meta charset=UTF-8> and <meta name=viewport content=width=device-width, initial-scale=1.0>\n- Use bgcolor attribute alongside background-color CSS for Outlook compatibility\n- Prefer padding over margin (better email client support)\n- Use absolute URLs for all images and links\n- Remove all Figma-specific class names\n- Simplify DOM structure\n- Add MSO conditional comments for Outlook-specific fixes\n\n# POUR ACCESSIBILITY REQUIREMENTS\n\n## Perceivable\n- Alt Text: Provide descriptive alt text for ALL meaningful images\n- Decorative Images: Use alt= (empty alt) for purely decorative images\n- Color Contrast: Minimum 4.5:1 contrast ratio for regular text. Minimum 3:1 for large text\n- Typography: Minimum font-size of 14px for body text. Never below 12px\n- Color Independence: Never rely solely on color to convey meaning\n\n## Operable\n- Clickable Areas: All buttons and links must be at least 44x44 pixels\n- Link Text: Use descriptive text. NEVER use click here or read more alone\n- Tab Order: Ensure logical tab order follows visual reading order\n\n## Understandable\n- Headings: Use h1, h2, h3 in strict logical hierarchy. NEVER skip levels\n- Lists: Use proper ul/li and ol/li markup. NEVER use manual bullets\n- Alignment: Left-align body text. Center-align only headings and CTAs when appropriate\n\n## Robust\n- Language Tag: Set lang attribute on html element\n- Table Roles: Add role=presentation to ALL layout tables\n- Valid Markup: Include proper DOCTYPE, meta charset, viewport\n- Linear Reading: Content must make sense read top-to-bottom\n\n# DARK MODE\n\n- Include @media (prefers-color-scheme: dark) in the style block\n- Add [data-ogsc] and [data-ogsb] selectors for Outlook dark mode\n- Add meta tags for color-scheme light dark\n- Provide dark overrides for background colors, text colors, border colors, link colors\n- Maintain WCAG contrast ratios in dark mode\n\n# IMAGE HANDLING\n\nWhen rebuilding from a design image:\n1. Analyze the visual layout, colors, typography, spacing, and structure\n2. Identify all sections: header, hero, body content, CTAs, footer\n3. Note exact colors\n4. Rebuild as clean email HTML following all rules above\n5. Use placeholder image tags with descriptive alt text where actual image URLs are not provided\n6. Ask the user to confirm colors and provide actual image/link URLs if not included\n\n# BRAND VALIDATION\n\nValidate ALL generated HTML against the BRAND GUIDELINES CSS below.\nCheck:\n1. Colors — only use hex values from the :root palette (--brand-* variables)\n2. Font sizes — only use sizes from the type scale (40/32/24/16px)\n3. Font family — Inter with Helvetica Neue/Arial fallback\n4. Spacing — all padding and margin values must be multiples of the --unit (8px)\n5. Border-radius — 0 for buttons, max 8px elsewhere\n6. Email width — 600px max-width\n7. Tone of Voice — follow the tone rules in the CSS comment block\n8. Do's and Don'ts — follow the rules in the CSS comment block\nReport any deviations with specific suggestions.\n\n# BRAND GUIDELINES CSS\n\n(To change brands: replace this CSS block. All checks adapt automatically.)\n\n/* ══════════════════════════════════════════════════════════\n   BRAND GUIDELINES — Email Production Pipeline PoC\n   Inspired by awwwards.com visual identity\n   VERTICAL RHYTHM: 8px baseline unit.\n   ALL font-sizes, line-heights, margins, paddings are multiples of 8px.\n   ══════════════════════════════════════════════════════════\n\n   ── Tone of Voice ──\n   Kind and friendly.\n   Optimistic.\n   See the potential in all people to provide value.\n   NEVER refer to autists as retard etc.\n   If addressing a disability like autism, focus on the upside such as ability to focus and specialize.\n\n   ── Do's and Don'ts ──\n   Do's:\n   * Always use the lime (#c8ff00) CTA button on a dark background for maximum contrast.\n   * Keep body copy at 16px/24px — never go smaller for readability on mobile.\n   * Use generous whitespace (40px+ section padding) to let content breathe.\n   Don't:\n   * Don't place lime text on a white background — it fails WCAG contrast.\n   * Don't use rounded corners on buttons — sharp edges are core to the brand identity.\n   * Don't mix more than two typeface weights (400 and 700) in a single email.\n*/\n:root {\n  --brand-black: #0d0d0d;\n  --brand-dark: #1a1a1a;\n  --brand-charcoal: #2c2c2c;\n  --brand-lime: #c8ff00;\n  --brand-lime-dark: #a3cc00;\n  --brand-white: #ffffff;\n  --brand-off-white: #f5f5f5;\n  --brand-gray-light: #e0e0e0;\n  --brand-gray: #999999;\n  --brand-gray-dark: #666666;\n  --unit: 8px;\n}\n.brand-h1 { font-size: 40px; line-height: 48px; }\n.brand-h2 { font-size: 32px; line-height: 40px; }\n.brand-h3 { font-size: 24px; line-height: 32px; }\n.brand-body { font-size: 16px; line-height: 24px; }\n.brand-btn-primary { background: #c8ff00; color: #0d0d0d; border-radius: 0; padding: 16px 32px; text-transform: uppercase; }\n.brand-btn-secondary { background: transparent; color: #ffffff; border: 2px solid #ffffff; border-radius: 0; padding: 16px 32px; }\n.brand-email-container { max-width: 600px; font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif; }\n.brand-email-header { background: #0d0d0d; padding: 32px 40px; }\n.brand-email-body { padding: 40px; }\n.brand-email-footer { background: #f5f5f5; padding: 24px 40px; }\n.brand-divider-accent { border-top: 3px solid #c8ff00; width: 48px; }\n\n# RESPONSE FORMAT\n\n- When presenting HTML during iteration, wrap it in a markdown code block\n- After presenting HTML, ALWAYS offer to send a rendered version to their email\n- Be specific when describing changes\n- Keep explanations concise but thorough",
+          "maxIterations": 20
+        }
+      },
+      "id": "e1a1a1a1-0001-0001-0001-000000000002",
+      "name": "Email Pipeline Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [800, 400]
+    },
+    {
+      "parameters": {
+        "modelName": "gemini-2.5-flash",
+        "options": {
+          "temperature": 0.2
+        }
+      },
+      "id": "e1a1a1a1-0001-0001-0001-000000000003",
+      "name": "Google Vertex Gemini",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleVertex",
+      "typeVersion": 1,
+      "position": [620, 620]
+    },
+    {
+      "parameters": {
+        "contextWindowLength": 8,
+        "sessionIdType": "customKey",
+        "sessionKey": "email-v6"
+      },
+      "id": "e1a1a1a1-0001-0001-0001-000000000004",
+      "name": "Conversation Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.2,
+      "position": [780, 620]
+    },
+    {
+      "parameters": {
+        "name": "run_accessibility_tests",
+        "description": "Run automated accessibility, dark mode, and email best practice tests on HTML email code. Pass the complete HTML string as input. Returns a detailed test report.",
+        "jsCode": "const html = query;\nif (!html || html.trim().length < 50) {\n  return 'ERROR: No valid HTML provided. Please pass the complete HTML email code to this tool.';\n}\nconst issues = [];\nconst warnings = [];\nconst passed = [];\nif (/<html[^>]*lang\\s*=/i.test(html)) { passed.push('HTML lang attribute present'); } else { issues.push('Missing lang attribute on <html> tag'); }\nconst headingMatches = [...html.matchAll(/<h([1-6])[^>]*>/gi)];\nconst headingLevels = headingMatches.map(m => parseInt(m[1]));\nlet headingOk = true;\nfor (let i = 1; i < headingLevels.length; i++) {\n  if (headingLevels[i] > headingLevels[i - 1] + 1) { issues.push('Heading hierarchy skip: h' + headingLevels[i - 1] + ' jumps to h' + headingLevels[i]); headingOk = false; }\n}\nif (headingOk && headingLevels.length > 0) passed.push('Heading hierarchy correct');\nif (headingLevels.length === 0) warnings.push('No headings found');\nconst imgs = html.match(/<img[^>]*>/gi) || [];\nlet missingAlt = 0;\nfor (const img of imgs) { if (!/alt\\s*=/i.test(img)) missingAlt++; }\nif (missingAlt > 0) issues.push(missingAlt + ' image(s) missing alt attribute');\nelse if (imgs.length > 0) passed.push('All ' + imgs.length + ' images have alt attributes');\nif (/@media[^{]*prefers-color-scheme\\s*:\\s*dark/i.test(html)) { passed.push('Dark mode @media query present'); } else { issues.push('No dark mode @media query found'); }\nif (/color-scheme/i.test(html)) { passed.push('color-scheme meta present'); } else { warnings.push('Missing color-scheme meta tag'); }\nif (/data-og[sc][cb]/i.test(html)) { passed.push('Outlook dark mode selectors present'); } else { warnings.push('Missing Outlook dark mode selectors'); }\nconst tables = html.match(/<table[^>]*>/gi) || [];\nlet tablesWithoutRole = 0;\nfor (const table of tables) { if (!/role\\s*=\\s*[\"']presentation[\"']/i.test(table)) tablesWithoutRole++; }\nif (tablesWithoutRole > 0) warnings.push(tablesWithoutRole + ' table(s) missing role=presentation');\nelse if (tables.length > 0) passed.push('All tables have role=presentation');\nconst fontSizes = [...html.matchAll(/font-size\\s*:\\s*(\\d+(?:\\.\\d+)?)\\s*px/gi)];\nlet smallFonts = 0;\nfor (const fs of fontSizes) { if (parseFloat(fs[1]) < 14) smallFonts++; }\nif (smallFonts > 0) warnings.push(smallFonts + ' font-size declaration(s) below 14px');\nelse if (fontSizes.length > 0) passed.push('All font sizes meet 14px minimum');\nconst links = [...html.matchAll(/<a[^>]*>([^<]*)<\\/a>/gi)];\nconst badTexts = ['click here', 'read more', 'learn more', 'here', 'link', 'more', 'click'];\nlet badLinks = [];\nfor (const link of links) { const text = link[1].trim().toLowerCase(); if (badTexts.includes(text)) badLinks.push(link[1].trim()); }\nif (badLinks.length > 0) warnings.push('Non-descriptive link text: ' + badLinks.join(', '));\nelse if (links.length > 0) passed.push('All links have descriptive text');\nif (/<!DOCTYPE html>/i.test(html)) passed.push('DOCTYPE present'); else warnings.push('Missing DOCTYPE');\nif (/meta[^>]*charset/i.test(html)) passed.push('Meta charset present'); else warnings.push('Missing meta charset');\nif (/meta[^>]*viewport/i.test(html)) passed.push('Meta viewport present'); else warnings.push('Missing meta viewport');\nif (/max-width|width\\s*:\\s*600/i.test(html)) passed.push('Email width constraint detected'); else warnings.push('No 600px max-width detected');\nconst status = issues.length === 0 ? 'ALL CHECKS PASSED' : 'ISSUES FOUND';\nlet report = 'ACCESSIBILITY & EMAIL TEST REPORT\\n\\nStatus: ' + status + '\\nPassed: ' + passed.length + ' | Issues: ' + issues.length + ' | Warnings: ' + warnings.length + '\\n\\n';\nif (passed.length > 0) report += 'PASSED:\\n' + passed.map(p => '  + ' + p).join('\\n') + '\\n\\n';\nif (issues.length > 0) report += 'ISSUES (must fix):\\n' + issues.map(i => '  - ' + i).join('\\n') + '\\n\\n';\nif (warnings.length > 0) report += 'WARNINGS (should fix):\\n' + warnings.map(w => '  ! ' + w).join('\\n') + '\\n\\n';\nreturn report;"
+      },
+      "id": "e1a1a1a1-0001-0001-0001-000000000005",
+      "name": "Run Accessibility Tests",
+      "type": "@n8n/n8n-nodes-langchain.toolCode",
+      "typeVersion": 1,
+      "position": [940, 620]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract action from agent response\n// Checks for :::SEND_START::: and :::SHIP_START::: markers\n\nconst agentOutput = $input.first().json.output || '';\n\n// Check for SEND markers\nconst sendMatch = agentOutput.match(/:::SEND_START:::\\s*([\\s\\S]*?)\\s*:::SEND_END:::/);\nif (sendMatch) {\n  try {\n    const payload = JSON.parse(sendMatch[1].trim());\n    return [{\n      json: {\n        action: 'send',\n        sendTo: payload.sendTo || '',\n        subject: payload.subject || 'Email Preview',\n        html: payload.html || '',\n        htmlLength: (payload.html || '').length,\n        extractedAt: new Date().toISOString()\n      }\n    }];\n  } catch (e) {\n    // Fallback: try extracting HTML directly\n    const raw = sendMatch[1].trim();\n    const htmlMatch = raw.match(/<!DOCTYPE[\\s\\S]*<\\/html>/i);\n    if (htmlMatch) {\n      return [{\n        json: {\n          action: 'send',\n          sendTo: '',\n          subject: 'Email Preview',\n          html: htmlMatch[0],\n          htmlLength: htmlMatch[0].length,\n          extractedAt: new Date().toISOString()\n        }\n      }];\n    }\n  }\n}\n\n// Check for SHIP markers\nconst shipMatch = agentOutput.match(/:::SHIP_START:::\\s*([\\s\\S]*?)\\s*:::SHIP_END:::/);\nif (shipMatch) {\n  try {\n    const payload = JSON.parse(shipMatch[1].trim());\n    return [{\n      json: {\n        action: 'ship',\n        campaignName: payload.campaignName || 'Untitled Campaign',\n        subject: payload.subject || '',\n        html: payload.html || '',\n        htmlLength: (payload.html || '').length,\n        extractedAt: new Date().toISOString()\n      }\n    }];\n  } catch (e) {\n    const raw = shipMatch[1].trim();\n    const htmlMatch = raw.match(/<!DOCTYPE[\\s\\S]*<\\/html>/i);\n    if (htmlMatch) {\n      return [{\n        json: {\n          action: 'ship',\n          campaignName: 'Untitled Campaign',\n          subject: '',\n          html: htmlMatch[0],\n          htmlLength: htmlMatch[0].length,\n          extractedAt: new Date().toISOString()\n        }\n      }];\n    }\n  }\n}\n\n// Check for TICKET markers\nconst ticketMatch = agentOutput.match(/:::TICKET_START:::\\s*([\\s\\S]*?)\\s*:::TICKET_END:::/);\nif (ticketMatch) {\n  try {\n    const payload = JSON.parse(ticketMatch[1].trim());\n    return [{\n      json: {\n        action: 'ticket',\n        summary: payload.summary || 'Untitled Email',\n        description: payload.description || '',\n        epicKey: payload.epicKey || '',\n        extractedAt: new Date().toISOString()\n      }\n    }];\n  } catch (e) {\n    return [{ json: { action: 'ticket', summary: 'Untitled Email', description: '', epicKey: '', extractedAt: new Date().toISOString() } }];\n  }\n}\n\n// No markers — normal chat\nreturn [{ json: { action: 'chat', output: agentOutput } }];"
+      },
+      "id": "e1a1a1a1-0001-0001-0001-000000000007",
+      "name": "Extract & Route",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1100, 400]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "1",
+              "leftValue": "={{ $json.action }}",
+              "rightValue": "send",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "e1a1a1a1-0001-0001-0001-000000000020",
+      "name": "Is Send?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [1350, 400]
+    },
+    {
+      "parameters": {
+        "fromEmail": "vml.map.td.poc@gmail.com",
+        "toEmail": "={{ $json.sendTo }}",
+        "subject": "={{ $json.subject }}",
+        "emailType": "html",
+        "html": "={{ $json.html }}",
+        "options": {}
+      },
+      "id": "e1a1a1a1-0001-0001-0001-000000000021",
+      "name": "Send Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [1600, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "1",
+              "leftValue": "={{ $json.action }}",
+              "rightValue": "ship",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "e1a1a1a1-0001-0001-0001-000000000008",
+      "name": "Is Ship?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [1600, 520]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://your-acc-instance.campaign.adobe.com/nl/jsp/soaprouter.jsp",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "text/xml; charset=utf-8"
+            },
+            {
+              "name": "SOAPAction",
+              "value": "nms:delivery#SubmitDelivery"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "text/xml",
+        "body": "=<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:urn=\"urn:nms:delivery\">\n  <soapenv:Header/>\n  <soapenv:Body>\n    <urn:WriteDelivery>\n      <urn:delivery>\n        <delivery label=\"{{ $json.campaignName }}\" messageType=\"0\">\n          <targets>\n            <deliveryTemplate internalName=\"DM_HTML_EMAIL\"/>\n          </targets>\n          <content>\n            <html>\n              <source>{{ $json.html }}</source>\n            </html>\n            <subject>{{ $json.subject }}</subject>\n          </content>\n        </delivery>\n      </urn:delivery>\n    </urn:WriteDelivery>\n  </soapenv:Body>\n</soapenv:Envelope>",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "id": "e1a1a1a1-0001-0001-0001-000000000011",
+      "name": "Push to Adobe Campaign",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1900, 420]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1",
+              "name": "status",
+              "value": "chat_response",
+              "type": "string"
+            },
+            {
+              "id": "2",
+              "name": "message",
+              "value": "={{ $json.output }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e1a1a1a1-0001-0001-0001-000000000012",
+      "name": "Chat Only",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [2150, 820]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "1",
+              "leftValue": "={{ $json.action }}",
+              "rightValue": "ticket",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "e1a1a1a1-0001-0001-0001-000000000030",
+      "name": "Is Ticket?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [1850, 620]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://wundertracker.atlassian.net/rest/api/3/issue",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ (function() { const fields = { project: { key: 'TAD' }, summary: $json.summary, description: { type: 'doc', version: 1, content: [{ type: 'paragraph', content: [{ type: 'text', text: $json.description || 'Email production task' }] }] }, issuetype: { name: 'Task' } }; if ($json.epicKey) { fields.parent = { key: $json.epicKey }; } return JSON.stringify({ fields }); })() }}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "id": "e1a1a1a1-0001-0001-0001-000000000031",
+      "name": "Create Jira Ticket",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2150, 520]
+    }
+  ],
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Email Pipeline Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email Pipeline Agent": {
+      "main": [
+        [
+          {
+            "node": "Extract & Route",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract & Route": {
+      "main": [
+        [
+          {
+            "node": "Is Send?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Send?": {
+      "main": [
+        [
+          {
+            "node": "Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Is Ship?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Ship?": {
+      "main": [
+        [
+          {
+            "node": "Push to Adobe Campaign",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Is Ticket?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Ticket?": {
+      "main": [
+        [
+          {
+            "node": "Create Jira Ticket",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Chat Only",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Vertex Gemini": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Email Pipeline Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Conversation Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Email Pipeline Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run Accessibility Tests": {
+      "ai_tool": [
+        [
+          {
+            "node": "Email Pipeline Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

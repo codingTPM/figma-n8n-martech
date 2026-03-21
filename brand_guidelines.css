@@ -1,0 +1,242 @@
+/* 
+  ═══════════════════════════════════════════════════════
+  BRAND GUIDELINES — Email Production Pipeline PoC
+  Inspired by awwwards.com visual identity
+  
+  VERTICAL RHYTHM: 8px baseline unit.
+  ALL font-sizes, line-heights, margins, and paddings
+  are multiples of 8px.
+  ═══════════════════════════════════════════════════════
+ 
+  ── Tone of Voice ──
+  Kind and friendly.
+  Optimistic.
+  See the potential in all people to provide value.
+  NEVER refert to autists as retard etc.
+  If adressing a disabillity like autism them focus on the upside such as ability to focus and specialize.
+
+  ── Do's and Don'ts ──
+  
+  Do's:
+  * Always use the lime (#c8ff00) CTA button on a dark background for maximum contrast.
+  * Keep body copy at 16px/24px — never go smaller for readability on mobile.
+  * Use generous whitespace (40px+ section padding) to let content breathe.
+  
+  Don't:
+  * Don't place lime text on a white background — it fails WCAG contrast.
+  * Don't use rounded corners on buttons — sharp edges are core to the brand identity.
+  * Don't mix more than two typeface weights (400 and 700) in a single email.
+  
+*/
+
+
+/* ── Color Palette ── */
+:root {
+  /* Primary */
+  --brand-black:        #0d0d0d;
+  --brand-dark:         #1a1a1a;
+  --brand-charcoal:     #2c2c2c;
+
+  /* Accent */
+  --brand-lime:         #c8ff00;   /* Awwwards signature neon-lime */
+  --brand-lime-dark:    #a3cc00;
+
+  /* Neutral */
+  --brand-white:        #ffffff;
+  --brand-off-white:    #f5f5f5;
+  --brand-gray-light:   #e0e0e0;
+  --brand-gray:         #999999;
+  --brand-gray-dark:    #666666;
+
+  /* Semantic */
+  --brand-success:      #00c781;
+  --brand-warning:      #ffba08;
+  --brand-error:        #ff4d4d;
+  --brand-info:         #4dabf7;
+
+  /* Baseline unit */
+  --unit:               8px;
+}
+
+/* ── Typography ── */
+/* Primary: Inter (clean, modern, highly readable in email)
+   Fallback: Helvetica Neue, Arial, sans-serif
+
+   Every type size snaps to the 8px grid:
+     font-size → nearest 8px multiple
+     line-height → next 8px multiple above font-size  */
+
+.brand-font-heading {
+  font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.brand-font-body {
+  font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+
+/* Type scale — all on 8px grid */
+.brand-h1      { font-size: 40px; line-height: 48px; } /* 5×8 / 6×8 */
+.brand-h2      { font-size: 32px; line-height: 40px; } /* 4×8 / 5×8 */
+.brand-h3      { font-size: 24px; line-height: 32px; } /* 3×8 / 4×8 */
+.brand-body    { font-size: 16px; line-height: 24px; } /* 2×8 / 3×8 */
+.brand-small   { font-size: 16px; line-height: 24px; } /* same grid slot, lighter weight */
+.brand-caption { font-size: 16px; line-height: 24px; } /* minimum readable, stays on grid */
+
+/* ── Spacing Scale (strict 8px multiples) ── */
+/*  --space-1:   8px   (1×)   */
+/*  --space-2:  16px   (2×)   */
+/*  --space-3:  24px   (3×)   */
+/*  --space-4:  32px   (4×)   */
+/*  --space-5:  40px   (5×)   */
+/*  --space-6:  48px   (6×)   */
+/*  --space-8:  64px   (8×)   */
+
+/* ── Buttons ── */
+.brand-btn-primary {
+  background-color: var(--brand-lime);
+  color: var(--brand-black);
+  font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 600;
+  font-size: 16px;             /* 2×8 */
+  line-height: 24px;           /* 3×8 */
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  padding: 16px 32px;          /* 2×8 / 4×8 */
+  border: none;
+  border-radius: 0;            /* Sharp corners — Awwwards style */
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.brand-btn-secondary {
+  background-color: transparent;
+  color: var(--brand-white);
+  font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 600;
+  font-size: 16px;             /* 2×8 */
+  line-height: 24px;           /* 3×8 */
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  padding: 16px 32px;          /* 2×8 / 4×8  (border inside) */
+  border: 2px solid var(--brand-white);
+  border-radius: 0;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+}
+
+/* ── Email-Specific Layout ── */
+.brand-email-container {
+  max-width: 600px;
+  background-color: var(--brand-white);
+  font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 16px;             /* 2×8 */
+  line-height: 24px;           /* 3×8 */
+  color: #333333;
+}
+
+.brand-email-header {
+  background-color: var(--brand-black);
+  padding: 32px 40px;          /* 4×8 / 5×8 */
+  text-align: center;
+}
+
+.brand-email-body {
+  padding: 40px;               /* 5×8 */
+  background-color: var(--brand-white);
+}
+
+.brand-email-footer {
+  background-color: var(--brand-off-white);
+  padding: 24px 40px;          /* 3×8 / 5×8 */
+  text-align: center;
+  font-size: 16px;             /* 2×8 */
+  line-height: 24px;           /* 3×8 */
+  color: var(--brand-gray);
+}
+
+/* ── Dividers ── */
+.brand-divider {
+  border: none;
+  border-top: 1px solid var(--brand-gray-light);
+  margin: 24px 0;              /* 3×8 */
+}
+
+.brand-divider-accent {
+  border: none;
+  border-top: 3px solid var(--brand-lime);
+  width: 48px;                 /* 6×8 */
+  margin: 24px 0;              /* 3×8 */
+}
+
+/* ── Image Treatment ── */
+.brand-img-full {
+  width: 100%;
+  display: block;
+  margin-bottom: 24px;         /* 3×8 */
+}
+
+.brand-img-rounded {
+  border-radius: 8px;          /* 1×8 */
+}
+
+/* ── Link Style ── */
+.brand-link {
+  color: var(--brand-black);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+/* ── Dark Section (hero, header) ── */
+.brand-section-dark {
+  background-color: var(--brand-black);
+  color: var(--brand-white);
+  padding: 48px 40px;          /* 6×8 / 5×8 */
+}
+
+.brand-section-dark .brand-link {
+  color: var(--brand-lime);
+}
+
+/*
+   ═══════════════════════════════════════════════════════
+   USAGE NOTES FOR LLM
+   ═══════════════════════════════════════════════════════
+
+   VERTICAL RHYTHM: Every dimension is a multiple of 8px.
+   No exceptions. This keeps the layout rhythmic and aligned.
+
+   When generating HTML emails, apply these guidelines:
+
+   1. COLORS: Dark header (#0d0d0d), white body, off-white footer.
+      Accent with lime (#c8ff00) for CTAs and highlights.
+
+   2. TYPOGRAPHY: Inter with Helvetica Neue/Arial fallback.
+      Headings bold (700), body regular (400), tight letter-spacing.
+      Font sizes: 40 / 32 / 24 / 16px.
+      Line heights: 48 / 40 / 32 / 24px.
+      Always one 8px step above the font-size.
+
+   3. BUTTONS: Lime bg, black text, uppercase, no border-radius.
+      Padding: 16px 32px. Font: 16px/24px.
+
+   4. SPACING: Strict 8px multiples only.
+      Section padding: 40px. Internal gaps: 16px or 24px.
+      Between sections: 32px or 48px. Never use odd values.
+
+   5. LAYOUT: 600px max-width, table-based for email.
+      Dark header → white body → off-white footer.
+
+   6. IMAGERY: Full-width hero, 8px border-radius max.
+
+   7. ACCENTS: 3px lime divider bar, 48px wide.
+
+   8. TONE: Modern, minimal, bold. Whitespace-driven.
+   ═══════════════════════════════════════════════════════
+*/

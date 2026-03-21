@@ -246,17 +246,17 @@
   <div id="image-preview"></div>
 
   <div id="input-bar">
-    <button id="attach-btn" title="Attach image">+</button>
+    <button id="attach-btn" title="Attach image or HTML file">+</button>
     <textarea id="msg-input" rows="1" placeholder="Describe your email or paste HTML..."></textarea>
     <button id="send-btn" title="Send" disabled>&#10148;</button>
-    <input type="file" id="file-input" accept="image/*" multiple />
+    <input type="file" id="file-input" accept="image/*,.html,.htm" multiple />
   </div>
 
   <script>
     // ╔═══════════════════════════════════════════════════════════╗
     // ║  SETUP: Replace the URL below with your webhook URL.     ║
     // ╚═══════════════════════════════════════════════════════════╝
-    const WEBHOOK_URL = 'http://localhost:5678/webhook/8968743c-ff4c-4c48-bd35-34bed0debb6c/chat';
+    const WEBHOOK_URL = 'http://localhost:5678/webhook/44710734-f1e5-4177-8754-c12eabfd3b5b/chat';
 
     const messages  = document.getElementById('messages');
     const input     = document.getElementById('msg-input');
@@ -283,7 +283,18 @@
     // ── Attach images via + button ──
     attachBtn.addEventListener('click', () => fileInput.click());
     fileInput.addEventListener('change', () => {
-      for (const file of fileInput.files) addImage(file);
+      for (const file of fileInput.files) {
+        if (file.name.match(/\.html?$/i)) {
+          file.text().then(html => {
+            input.value = html;
+            input.style.height = 'auto';
+            input.style.height = Math.min(input.scrollHeight, 180) + 'px';
+            updateSendBtn();
+          });
+        } else {
+          addImage(file);
+        }
+      }
       fileInput.value = '';
     });
 
