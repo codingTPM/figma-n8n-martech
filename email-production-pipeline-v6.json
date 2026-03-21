@@ -48,8 +48,7 @@
     {
       "parameters": {
         "contextWindowLength": 8,
-        "sessionIdType": "customKey",
-        "sessionKey": "email-v6"
+        "sessionIdType": "fromInput"
       },
       "id": "e1a1a1a1-0001-0001-0001-000000000004",
       "name": "Conversation Memory",
