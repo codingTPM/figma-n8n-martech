@@ -95,7 +95,7 @@ Routing is sequential IF-chain: Is Send? → Is Ship? → Is Ticket? → Chat On
 
 | Component | Detail |
 |-----------|--------|
-| **Runtime** | n8n v2.10.4, Docker container, `localhost:5678` |
+| **Runtime** | n8n v2.12.3, Docker container, `localhost:5678` |
 | **LLM** | Google Vertex AI, Gemini 2.5 Flash, temp 0.2 |
 | **Persistence** | SQLite DB inside Docker volume. On VM: persistent disk. |
 | **Memory** | Buffer window of 8 messages per session. Keeps token budget manageable — large HTML in memory caused iteration loops at higher values. |
@@ -142,7 +142,7 @@ Routing is sequential IF-chain: Is Send? → Is Ship? → Is Ticket? → Chat On
 - [x] Email send/proof via Gmail SMTP
 - [x] Jira ticket creation via REST API (with optional epic)
 - [x] Adobe Campaign push node (placeholder — needs real endpoint)
-- [x] Custom chat UI (email-chat.html)
+- [x] Custom chat UI (email-chat.html) with HTML code block collapsing
 - [x] Docker deployment with persistent volume
 - [x] Git repo with CI-safe .gitignore
 - [x] Brand guidelines CSS (`brand_guidelines.css`) with Tone of Voice, Do's/Don'ts, 8px baseline grid
