@@ -347,7 +347,7 @@
     // ╔═══════════════════════════════════════════════════════════╗
     // ║  SETUP: Replace the URL below with your webhook URL.     ║
     // ╚═══════════════════════════════════════════════════════════╝
-    const WEBHOOK_URL = 'http://localhost:5678/webhook/2b1d314a-b915-4295-8194-c53b8f339a1f/chat';
+    const WEBHOOK_URL = '/webhook/2b1d314a-b915-4295-8194-c53b8f339a1f/chat';
 
     // ── Password gate ──
     const ACCESS_CODE = 'vml2026';
@@ -559,13 +559,14 @@
       const div = document.createElement('div');
       div.className = 'msg bot';
 
-      // Detect if the response contains a standalone HTML document
+      // Detect if the response contains a standalone HTML document or large HTML block
       const htmlMatch = text.match(/(<!DOCTYPE[\s\S]*<\/html>|<html[\s\S]*<\/html>)/i);
       if (htmlMatch) {
         const rawHtml = htmlMatch[1];
         const before = text.slice(0, htmlMatch.index).trim();
         const after = text.slice(htmlMatch.index + rawHtml.length).trim();
 
+        // Text before the HTML
         if (before) {
           const p = document.createElement('p');
           p.textContent = before;
@@ -591,6 +592,7 @@
         details.innerHTML = '<summary>View HTML source</summary><pre><code>' + escapeHtml(rawHtml) + '</code></pre>';
         div.appendChild(details);
 
+        // Text after the HTML
         if (after) {
           const p2 = document.createElement('p');
           p2.textContent = after;
@@ -598,11 +600,13 @@
         }
 
         messages.appendChild(div);
+        // Write HTML into iframe after it's in the DOM
         iframe.contentDocument.open();
         iframe.contentDocument.write(rawHtml);
         iframe.contentDocument.close();
       } else {
         let html = escapeHtml(text);
+        // Hide HTML code blocks behind a collapsible toggle
         html = html.replace(/```(\w*)\n([\s\S]*?)```/g, (_, lang, code) => {
           if (code.trim().match(/^&lt;!DOCTYPE|^&lt;html|^&lt;table|^&lt;div|^&lt;head/i)) {
             return '<details class="code-toggle"><summary>View HTML code</summary><pre><code>' + code + '</code></pre></details>';
